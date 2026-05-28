@@ -38,6 +38,7 @@ gen-py/
 node_modules/
 target/
 /graphs
+/hsl
 
 # for local dev only
 /src/test/resources/speedtest/travelSearch-results-*.csv
