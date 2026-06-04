@@ -289,6 +289,26 @@
                             <sources>
                                 <source>src/test/java</source>
                                 <source>src/test-fixtures/java</source>
+                                <source>src/ext-test/java</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.6.1</version>
+                <executions>
+                    <execution>
+                        <id>build-helper-generate-sources</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>src/ext/java</source>
                             </sources>
                         </configuration>
                     </execution>
