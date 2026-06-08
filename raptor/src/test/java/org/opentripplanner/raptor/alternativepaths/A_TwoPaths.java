@@ -1,6 +1,7 @@
-package org.opentripplanner.raptor.robustnesstests;
+package org.opentripplanner.raptor.alternativepaths;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.multiCriteria;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.standard;
 
 import java.util.List;
@@ -9,6 +10,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.opentripplanner.raptor.RaptorService;
 import org.opentripplanner.raptor._data.RaptorTestConstants;
+import org.opentripplanner.raptor._data.api.PathUtils;
 import org.opentripplanner.raptor._data.transit.TestTransitData;
 import org.opentripplanner.raptor._data.transit.TestTripSchedule;
 import org.opentripplanner.raptor.api.request.RaptorRequestBuilder;
@@ -18,11 +20,11 @@ import org.opentripplanner.raptor.moduletests.support.RaptorModuleTestCase;
 /**
  * FEATURE UNDER TEST
  * <p>
- * With two
+ * With two alternatives departing at the same time, with one transfer each
  * - RAPTOR should choose the one arriving first
- * - RAPTOR with criterion should choose both
+ * - RAPTOR with criterion should choose the one arriving first
  */
-public class G_TwoPathsOverlapping implements RaptorTestConstants {
+public class A_TwoPaths implements RaptorTestConstants {
 
   private final TestTransitData data = new TestTransitData();
   private final RaptorRequestBuilder<TestTripSchedule> requestBuilder = data.requestBuilder();
@@ -37,7 +39,6 @@ public class G_TwoPathsOverlapping implements RaptorTestConstants {
    * Schedule:
    *   R1: 00:01 - 00:06 - 00:16
    *   R2: 00:01 - 00:08 - 00:10
-   *   R3:         00:10 - 00:20
    *
    * Access (toStop & duration):
    *   1  30s
@@ -52,14 +53,17 @@ public class G_TwoPathsOverlapping implements RaptorTestConstants {
       .withTimetables(
         """
         -- R1
-        A      B       C
-        00:01  00:05   00:10
+        A      B
+        00:01  00:06
         -- R2
-               B       C      D
-               00:06   00:11  00:20
+               B              D
+               00:07          00:17
         -- R3
-                       C      D
-                       00:20  00:25
+        A             C
+        00:01         00:08
+        -- R4
+                      C       D
+                      00:09   00:11
         """
       )
       .egress("D ~ Walk 20s");
@@ -72,11 +76,10 @@ public class G_TwoPathsOverlapping implements RaptorTestConstants {
   }
 
   static List<RaptorModuleTestCase> testCases() {
-    var pathForward = "Walk 30s ~ A ~ BUS R1 0:01 0:05 ~ B ~ BUS R2 0:06 0:20 ~ D ~ Walk 20s [0:00:30 0:20:20 19m50s Tₙ1]";
-    var pathReverse = "Walk 30s ~ A ~ BUS R1 0:01 0:10 ~ C ~ BUS R2 0:11 0:20 ~ D ~ Walk 20s [0:00:30 0:20:20 19m50s Tₙ1]";
+    var path = "Walk 30s ~ A ~ BUS R3 0:01 0:08 ~ C ~ BUS R4 0:09 0:11 ~ D ~ Walk 20s [0:00:30 0:11:20 10m50s Tₙ1 C₁1_900]";
     return RaptorModuleTestCase.of()
-      .add(standard().forwardOnly(), pathForward)
-      .add(standard().reverseOnly(), pathReverse)
+      .add(standard(), PathUtils.withoutCost(path))
+      .add(multiCriteria(), path)
       .build();
   }
 

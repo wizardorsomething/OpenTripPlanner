@@ -1,4 +1,4 @@
-package org.opentripplanner.raptor.robustnesstests;
+package org.opentripplanner.raptor.alternativepaths;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.multiCriteria;
@@ -20,11 +20,10 @@ import org.opentripplanner.raptor.moduletests.support.RaptorModuleTestCase;
 /**
  * FEATURE UNDER TEST
  * <p>
- * With two alternatives departing at the same time, with one transfer each
- * - RAPTOR should choose the one arriving first
- * - RAPTOR with criterion should choose the one arriving first
+ * Raptor should return a path if it exists for the most basic case with one route with one trip, an
+ * access and an egress path.
  */
-public class A_TwoPaths implements RaptorTestConstants {
+public class SingleRouteTest implements RaptorTestConstants {
 
   private final TestTransitData data = new TestTransitData();
   private final RaptorRequestBuilder<TestTripSchedule> requestBuilder = data.requestBuilder();
@@ -38,7 +37,6 @@ public class A_TwoPaths implements RaptorTestConstants {
    *
    * Schedule:
    *   R1: 00:01 - 00:06 - 00:16
-   *   R2: 00:01 - 00:08 - 00:10
    *
    * Access (toStop & duration):
    *   1  30s
@@ -49,21 +47,11 @@ public class A_TwoPaths implements RaptorTestConstants {
   @BeforeEach
   void setup() {
     data
-      .access("Walk 30s ~ A")
+      .access("Walk 30s ~ B")
       .withTimetables(
         """
-        -- R1
-        A      B
-        00:01  00:06
-        -- R2
-               B              D
-               00:07          00:17
-        -- R3
-        A             C
-        00:01         00:08
-        -- R4
-                      C       D
-                      00:09   00:11
+        B      C      D
+        00:01  00:06  00:16
         """
       )
       .egress("D ~ Walk 20s");
@@ -76,10 +64,9 @@ public class A_TwoPaths implements RaptorTestConstants {
   }
 
   static List<RaptorModuleTestCase> testCases() {
-    var path = "Walk 30s ~ A ~ BUS R3 0:01 0:08 ~ C ~ BUS R4 0:09 0:11 ~ D ~ Walk 20s [0:00:30 0:11:20 10m50s Tₙ1 C₁1_900]";
+    var path = "Walk 30s ~ B ~ BUS R1 0:01 0:16 ~ D ~ Walk 20s [0:00:30 0:16:20 15m50s Tₙ0]";
     return RaptorModuleTestCase.of()
-      .add(standard(), PathUtils.withoutCost(path))
-      .add(multiCriteria(), path)
+      .add(standard(), path)
       .build();
   }
 

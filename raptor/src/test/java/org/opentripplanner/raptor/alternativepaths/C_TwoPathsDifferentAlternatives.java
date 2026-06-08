@@ -1,4 +1,4 @@
-package org.opentripplanner.raptor.robustnesstests;
+package org.opentripplanner.raptor.alternativepaths;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.standard;
