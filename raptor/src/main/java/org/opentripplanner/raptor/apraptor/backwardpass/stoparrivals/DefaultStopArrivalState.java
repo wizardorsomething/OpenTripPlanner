@@ -31,6 +31,8 @@ sealed class DefaultStopArrivalState<T extends RaptorTripSchedule>
    */
   static final int NOT_SET = -1;
 
+  private float altCriterion = 0;
+
   // Best time - access, transit or transfer
   private int bestArrivalTime = NOT_SET;
 
@@ -47,6 +49,9 @@ sealed class DefaultStopArrivalState<T extends RaptorTripSchedule>
   private RaptorTransfer transferPath = null;
 
   DefaultStopArrivalState() {}
+
+  @Override
+  public float altCriterion() { return altCriterion; }
 
   @Override
   public final int time() {
@@ -107,6 +112,7 @@ sealed class DefaultStopArrivalState<T extends RaptorTripSchedule>
     return boardStop;
   }
 
+  // TODO: Update alternative criterion
   @Override
   public void arriveByTransit(int arrivalTime, int boardStop, int boardTime, T trip) {
     this.onBoardArrivalTime = arrivalTime;
@@ -139,6 +145,7 @@ sealed class DefaultStopArrivalState<T extends RaptorTripSchedule>
     return transferPath;
   }
 
+  // TODO: Alternative criterion stuff?
   @Override
   public void transferToStop(int fromStop, int arrivalTime, RaptorTransfer transferPath) {
     this.bestArrivalTime = arrivalTime;
@@ -169,6 +176,7 @@ sealed class DefaultStopArrivalState<T extends RaptorTripSchedule>
     return builder;
   }
 
+  // TODO: Alternative criterion stuff?
   void setAccessTime(int time, boolean isBestTimeOverall, boolean onBoard) {
     if (isBestTimeOverall) {
       this.bestArrivalTime = time;

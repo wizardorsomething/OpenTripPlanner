@@ -32,6 +32,10 @@ public final class AccessStopArrivalState<T extends RaptorTripSchedule>
   }
 
   /* Implement StopArrivalState */
+  @Override
+  public float altCriterion() {
+    return delegate.altCriterion();
+  }
 
   @Override
   public int time() {

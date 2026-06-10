@@ -12,6 +12,8 @@ public interface StopArrivalState<T extends RaptorTripSchedule> {
   /** The overall best time to reach this stop */
   int time();
 
+  float altCriterion();
+
   /**
    * The best time to reach this stop on board a vehicle, it may be by transit or by flex access.
    */
