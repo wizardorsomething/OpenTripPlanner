@@ -1,7 +1,5 @@
 package org.opentripplanner.standalone.api;
 
-import static org.opentripplanner.standalone.configure.ConstructApplication.createRaptorTransitData;
-
 import io.micrometer.core.instrument.Metrics;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -12,9 +10,15 @@ import org.opentripplanner.ext.emission.internal.DefaultEmissionRepository;
 import org.opentripplanner.ext.emission.internal.DefaultEmissionService;
 import org.opentripplanner.ext.emission.internal.itinerary.EmissionItineraryDecorator;
 import org.opentripplanner.ext.fares.service.gtfs.v1.DefaultFareService;
+import org.opentripplanner.ext.flex.FlexParameters;
+import org.opentripplanner.framework.transaction.api.RepositoryHandle;
+import org.opentripplanner.framework.transaction.internal.TransactionFactory;
 import org.opentripplanner.raptor.configure.RaptorConfig;
 import org.opentripplanner.routing.algorithm.filterchain.framework.spi.ItineraryDecorator;
+import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransitData;
+import org.opentripplanner.routing.algorithm.raptoradapter.transit.TransitTuningParameters;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripSchedule;
+import org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.RaptorTransitDataMapper;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.fares.FareService;
 import org.opentripplanner.routing.linking.LinkingContextFactory;
@@ -49,11 +53,13 @@ import org.opentripplanner.transfer.regular.TransferRepository;
 import org.opentripplanner.transfer.regular.TransferServiceTestFactory;
 import org.opentripplanner.transfer.regular.internal.DefaultTransferRepository;
 import org.opentripplanner.transfer.regular.internal.TransferIndex;
+import org.opentripplanner.transit.model.timetable.TimetableSnapshot;
+import org.opentripplanner.transit.repository.MutableTimetableSnapshot;
+import org.opentripplanner.transit.repository.ReadOnlyTimetableSnapshot;
+import org.opentripplanner.transit.repository.TimetableSnapshotLifecycle;
 import org.opentripplanner.transit.service.DefaultTransitService;
 import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.transit.service.TransitService;
-import org.opentripplanner.updater.TimetableSnapshotParameters;
-import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 
 public class TestServerContext {
 
@@ -82,34 +88,100 @@ public class TestServerContext {
     TimetableRepository timetableRepository,
     TransferRepository transferRepository,
     FareService fareService,
-    @Nullable TimetableSnapshotManager snapshotManager,
-    @Nullable RouteRequest request
+    @Nullable RouteRequest request,
+    @Nullable FlexParameters flexParameters
   ) {
     var routerConfig = RouterConfig.DEFAULT;
 
     if (request == null) {
       request = routerConfig.routingRequestDefaults();
     }
-    if (snapshotManager == null) {
-      snapshotManager = new TimetableSnapshotManager(
-        null,
-        TimetableSnapshotParameters.DEFAULT,
-        LocalDate::now
-      );
+    if (flexParameters == null) {
+      flexParameters = routerConfig.flexParameters();
     }
-
     timetableRepository.index();
-    createRaptorTransitData(
+
+    TransitTuningParameters tuningParameters = routerConfig.transitTuningConfig();
+    var scheduledRaptorData = RaptorTransitDataMapper.map(
+      tuningParameters,
+      timetableRepository,
+      transferRepository
+    );
+    timetableRepository.initRaptorTransitData(scheduledRaptorData);
+
+    var registry = TransactionFactory.createRepositoryRegistry();
+    var timetableSnapshot = new TimetableSnapshot(
+      new RaptorTransitData(timetableRepository.getRaptorTransitData()),
+      timetableRepository.copyTripCalendarForRealTimeUpdates()
+    );
+    RepositoryHandle<ReadOnlyTimetableSnapshot, MutableTimetableSnapshot> timetableHandle =
+      registry.registerRepositorySnapshot(
+        timetableSnapshot,
+        new TimetableSnapshotLifecycle(timetableSnapshot, false, LocalDate::now)
+      );
+
+    return buildContext(
+      graph,
       timetableRepository,
       transferRepository,
-      routerConfig.transitTuningConfig()
+      fareService,
+      request,
+      flexParameters,
+      routerConfig,
+      registry,
+      timetableHandle
     );
+  }
 
-    snapshotManager.purgeAndCommit();
+  /**
+   * Create a context for unit testing using an existing repository handle (e.g. when real-time
+   * updates have already been applied to that handle before context creation).
+   */
+  public static OtpServerRequestContext createServerContext(
+    Graph graph,
+    TimetableRepository timetableRepository,
+    TransferRepository transferRepository,
+    FareService fareService,
+    RepositoryHandle<ReadOnlyTimetableSnapshot, MutableTimetableSnapshot> timetableHandle,
+    org.opentripplanner.framework.transaction.RepositoryRegistry registry,
+    @Nullable RouteRequest request,
+    @Nullable FlexParameters flexParameters
+  ) {
+    var routerConfig = RouterConfig.DEFAULT;
+    if (request == null) {
+      request = routerConfig.routingRequestDefaults();
+    }
+    if (flexParameters == null) {
+      flexParameters = routerConfig.flexParameters();
+    }
+    return buildContext(
+      graph,
+      timetableRepository,
+      transferRepository,
+      fareService,
+      request,
+      flexParameters,
+      routerConfig,
+      registry,
+      timetableHandle
+    );
+  }
 
+  private static OtpServerRequestContext buildContext(
+    Graph graph,
+    TimetableRepository timetableRepository,
+    TransferRepository transferRepository,
+    FareService fareService,
+    RouteRequest request,
+    FlexParameters flexParameters,
+    RouterConfig routerConfig,
+    org.opentripplanner.framework.transaction.RepositoryRegistry registry,
+    RepositoryHandle<ReadOnlyTimetableSnapshot, MutableTimetableSnapshot> timetableHandle
+  ) {
+    var transactionScope = registry.scope();
     var transitService = new DefaultTransitService(
       timetableRepository,
-      snapshotManager.getTimetableSnapshot()
+      timetableHandle.repositorySnapshot(transactionScope)
     );
 
     var raptorConfig = new RaptorConfig<TripSchedule>(
@@ -122,7 +194,7 @@ public class TestServerContext {
     return new DefaultServerRequestContext(
       DebugUiConfig.DEFAULT,
       fareService,
-      routerConfig.flexParameters(),
+      flexParameters,
       graph,
       createLinkingContextFactory(graph, vertexLinker, transitService),
       Metrics.globalRegistry,
@@ -133,6 +205,7 @@ public class TestServerContext {
       request,
       createStreetLimitationParametersService(),
       TransferServiceTestFactory.transferService(transferRepository),
+      transactionScope,
       routerConfig.transitTuningConfig(),
       transitService,
       routerConfig.triasApiParameters(),

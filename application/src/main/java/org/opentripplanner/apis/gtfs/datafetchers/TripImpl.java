@@ -13,7 +13,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.LineString;
 import org.opentripplanner.apis.gtfs.GraphQLRequestContext;
@@ -32,6 +31,7 @@ import org.opentripplanner.routing.alertpatch.EntitySelector;
 import org.opentripplanner.routing.alertpatch.TransitAlert;
 import org.opentripplanner.routing.services.TransitAlertService;
 import org.opentripplanner.service.realtimevehicles.RealtimeVehicleService;
+import org.opentripplanner.transit.model.basic.Notice;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.organization.Agency;
@@ -49,9 +49,10 @@ public class TripImpl implements GraphQLDataFetchers.GraphQLTrip {
   public DataFetcher<Iterable<String>> activeDates() {
     return environment ->
       getTransitService(environment)
-        .getCalendarService()
-        .getServiceDatesForServiceId(getSource(environment).getServiceId())
+        .getTripCalendars()
+        .listServiceDates(getSource(environment).getServiceId())
         .stream()
+        .sorted()
         .map(ServiceDateUtils::asCompactString)
         .collect(Collectors.toList());
   }
@@ -266,6 +267,11 @@ public class TripImpl implements GraphQLDataFetchers.GraphQLTrip {
   }
 
   @Override
+  public DataFetcher<Iterable<Notice>> notices() {
+    return env -> getTransitService(env).findNotices(getSource(env));
+  }
+
+  @Override
   public DataFetcher<TripPattern> pattern() {
     return this::getTripPattern;
   }
@@ -419,31 +425,12 @@ public class TripImpl implements GraphQLDataFetchers.GraphQLTrip {
     return getTransitService(environment).findPattern(environment.getSource());
   }
 
-  private TripPattern getTripPattern(
-    DataFetchingEnvironment environment,
-    @Nullable LocalDate date
-  ) {
-    return date == null
-      ? getTripPattern(environment)
-      : getTransitService(environment).findPattern(environment.getSource(), date);
-  }
-
   private TransitService getTransitService(DataFetchingEnvironment environment) {
     return environment.<GraphQLRequestContext>getContext().transitService();
   }
 
   private RealtimeVehicleService getRealtimeVehiclesService(DataFetchingEnvironment environment) {
     return environment.<GraphQLRequestContext>getContext().realTimeVehicleService();
-  }
-
-  private static Optional<LocalDate> getOptionalServiceDateArgument(
-    DataFetchingEnvironment environment
-  ) throws ParseException {
-    var args = new GraphQLTypes.GraphQLTripArrivalStoptimeArgs(environment.getArguments());
-    if (args.getGraphQLServiceDate() != null) {
-      return Optional.of(ServiceDateUtils.parseString(args.getGraphQLServiceDate()));
-    }
-    return Optional.empty();
   }
 
   private Trip getSource(DataFetchingEnvironment environment) {

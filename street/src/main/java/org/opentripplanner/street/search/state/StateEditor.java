@@ -1,16 +1,16 @@
 package org.opentripplanner.street.search.state;
 
+import java.util.HashSet;
 import java.util.Set;
-import javax.annotation.Nullable;
+import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.opentripplanner.service.vehiclerental.model.RentalVehicleType.PropulsionType;
+import org.opentripplanner.service.vehiclerental.street.geofencing.GeofencingBoundaryExtension;
 import org.opentripplanner.street.mapping.StreetModeToRentalTraverseModeMapper;
 import org.opentripplanner.street.model.RentalFormFactor;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * This class is a wrapper around a new State that provides it with setter and increment methods,
@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory;
  */
 public class StateEditor {
 
-  private static final Logger LOG = LoggerFactory.getLogger(StateEditor.class);
   private final StreetSearchRequest request;
   private final State backState;
   private final Edge backEdge;
@@ -94,25 +93,19 @@ public class StateEditor {
     }
   }
 
-  /* PUBLIC METHODS */
-
   /**
-   *
-   * Why can a state editor only be used once? If you modify some component of state with and
-   * editor, use the editor to create a new state, and then make more modifications, these
-   * modifications will be applied to the previously created state. Reusing the state editor to make
-   * several states would modify an existing state somewhere earlier in the search, messing up the
-   * shortest path tree.
+   * Builds a new state from the current state editor.
    */
-  @Nullable
   public State makeState() {
     if (backState != null) {
       // check that time changes are coherent with edge traversal
       // direction
       double timeDelta = time_ms - backState.getTimeMilliseconds();
       if (traversingBackward ? (timeDelta > 0) : (timeDelta < 0)) {
-        LOG.trace("Time was incremented the wrong direction during state editing. {}", backEdge);
-        return null;
+        throw new IllegalStateException(
+          "Time was incremented the wrong direction during state editing, while traversing " +
+            backEdge
+        );
       }
     }
     return new State(
@@ -138,8 +131,6 @@ public class StateEditor {
   public String toString() {
     return "StateEditor{" + backState + "}";
   }
-
-  /* PUBLIC METHODS TO MODIFY A STATE BEFORE IT IS USED */
 
   /* Incrementors */
 
@@ -186,8 +177,6 @@ public class StateEditor {
     this.traversalDistance_m += length;
   }
 
-  /* Basic Setters */
-
   public void resetEnteredNoThroughTrafficArea() {
     if (!stateData.enteredNoThroughTrafficArea) {
       return;
@@ -206,22 +195,76 @@ public class StateEditor {
     stateData.enteredNoThroughTrafficArea = true;
   }
 
-  public void leaveNoRentalDropOffArea() {
-    if (!stateData.insideNoRentalDropOffArea) {
-      return;
+  /**
+   * Update geofencing zone tracking based on boundary extensions on the traversed edge.
+   */
+  public void updateGeofencingZones(Vertex fromVertex, Vertex toVertex, boolean arriveBy) {
+    var newZones = GeofencingBoundaryExtension.resolveZoneTransitions(
+      fromVertex.listGeofencingBoundaries(),
+      toVertex.listGeofencingBoundaries(),
+      stateData.currentGeofencingZones,
+      arriveBy
+    );
+    if (newZones != null) {
+      cloneStateDataAsNeeded();
+      stateData.currentGeofencingZones = newZones;
     }
-
-    cloneStateDataAsNeeded();
-    stateData.insideNoRentalDropOffArea = false;
   }
 
-  public void enterNoRentalDropOffArea() {
-    if (stateData.insideNoRentalDropOffArea) {
+  /**
+   * Whether drop-off is banned by the current geofencing zones in this editor's state data.
+   * Used to check zone state after traversal but before finalizing the state.
+   */
+  public boolean isDropOffBannedByCurrentZones() {
+    return GeofencingZone.resolveField(
+      stateData.currentGeofencingZones,
+      stateData.vehicleRentalNetwork,
+      GeofencingZone::dropOffBanned
+    );
+  }
+
+  /**
+   * Whether drop-off is banned by the current geofencing zones for a specific network.
+   * Used in the arrive-by deferred renting fork where the network hasn't been bound yet.
+   */
+  public boolean isDropOffBannedForNetwork(String network) {
+    return GeofencingZone.resolveField(
+      stateData.currentGeofencingZones,
+      network,
+      GeofencingZone::dropOffBanned
+    );
+  }
+
+  /**
+   * Initialize geofencing zones from pre-resolved zones on a vehicle rental vertex.
+   * Called at vehicle pickup time.
+   */
+  public void initializeGeofencingZones(Set<GeofencingZone> zones) {
+    cloneStateDataAsNeeded();
+    stateData.currentGeofencingZones = Set.copyOf(zones);
+  }
+
+  /**
+   * Bind this state to a specific vehicle rental network. Transitions a generic (null-network)
+   * RENTING_FLOATING state into a network-specific state.
+   */
+  public void bindToNetwork(String network) {
+    cloneStateDataAsNeeded();
+    stateData.vehicleRentalNetwork = network;
+  }
+
+  /**
+   * Record that this generic state has already forked a committed branch for the given network.
+   * Prevents duplicate forking at subsequent boundary crossings for the same network.
+   */
+  public void addCommittedNetwork(String network) {
+    if (stateData.committedNetworks.contains(network)) {
       return;
     }
-
     cloneStateDataAsNeeded();
-    stateData.insideNoRentalDropOffArea = true;
+    var newSet = new HashSet<>(stateData.committedNetworks);
+    newSet.add(network);
+    stateData.committedNetworks = Set.copyOf(newSet);
   }
 
   public void setBackMode(TraverseMode mode) {
@@ -255,7 +298,6 @@ public class StateEditor {
       stateData.vehicleRentalNetwork = null;
       stateData.rentalVehicleFormFactor = null;
       stateData.rentalVehiclePropulsionType = null;
-      stateData.insideNoRentalDropOffArea = false;
     } else {
       stateData.vehicleRentalState = VehicleRentalState.RENTING_FLOATING;
       stateData.currentMode = formFactor.traverseMode;
@@ -381,18 +423,9 @@ public class StateEditor {
     this.time_ms = 1000 * seconds;
   }
 
-  /* PUBLIC GETTER METHODS */
-
   public State getBackState() {
     return backState;
   }
-
-  public void resetStartedInNoDropOffZone() {
-    cloneStateDataAsNeeded();
-    stateData.noRentalDropOffZonesAtStartOfReverseSearch = Set.of();
-  }
-
-  /* PRIVATE METHODS */
 
   /**
    * To be called before modifying anything in the child's StateData. Makes sure that changes are

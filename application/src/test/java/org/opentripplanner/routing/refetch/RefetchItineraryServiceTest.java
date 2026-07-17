@@ -17,6 +17,7 @@ import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.linking.LinkingContextFactory;
 import org.opentripplanner.routing.linking.internal.VertexCreationService;
 import org.opentripplanner.service.streetdetails.StreetDetailsService;
+import org.opentripplanner.service.vehiclerental.GeofencingZoneService;
 import org.opentripplanner.street.geometry.GeometryUtils;
 import org.opentripplanner.street.geometry.WgsCoordinate;
 import org.opentripplanner.street.graph.Graph;
@@ -30,12 +31,13 @@ import org.opentripplanner.street.model.edge.StreetEdgeBuilder;
 import org.opentripplanner.street.model.vertex.LabelledIntersectionVertex;
 import org.opentripplanner.street.model.vertex.StreetVertex;
 import org.opentripplanner.street.model.vertex.TransitStopVertex;
+import org.opentripplanner.street.service.StreetLimitationParametersService;
 import org.opentripplanner.transfer.regular.RegularTransferService;
 import org.opentripplanner.transfer.regular.TransferServiceTestFactory;
 import org.opentripplanner.transfer.regular.model.PathTransfer;
-import org.opentripplanner.transit.model._data.TransitTestEnvironment;
-import org.opentripplanner.transit.model._data.TransitTestEnvironmentBuilder;
-import org.opentripplanner.transit.model._data.TripInput;
+import org.opentripplanner.transit.model.TransitTestEnvironment;
+import org.opentripplanner.transit.model.TransitTestEnvironmentBuilder;
+import org.opentripplanner.transit.model.TripInput;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.site.Station;
 import org.opentripplanner.transit.model.site.StopLocation;
@@ -297,19 +299,46 @@ class RefetchItineraryServiceTest {
   private RefetchItineraryService createRefetchService() {
     StreetDetailsService streetDetailsService = null;
     VertexCreationService vertexCreationService = new VertexCreationService(
-      new VertexLinker(GRAPH, VisibilityMode.TRAVERSE_AREA_EDGES, 10, false)
+      new VertexLinker(
+        GRAPH,
+        GeofencingZoneService.EMPTY,
+        VisibilityMode.TRAVERSE_AREA_EDGES,
+        10,
+        false
+      )
     );
     LinkingContextFactory linkingContextFactory = new LinkingContextFactory(
       GRAPH,
       vertexCreationService
     );
+    var streetLimitationParametersService = new StreetLimitationParametersService() {
+      @Override
+      public float maxCarSpeed() {
+        return 100f;
+      }
+
+      @Override
+      public int maxAreaNodes() {
+        return 0;
+      }
+
+      @Override
+      public float getBestWalkSafety() {
+        return 0;
+      }
+
+      @Override
+      public float getBestBikeSafety() {
+        return 0;
+      }
+    };
     return new RefetchItineraryService(
       GRAPH,
       TRANSIT_ENV.transitService(),
       TRANSFER_SERVICE,
       streetDetailsService,
       linkingContextFactory,
-      100f
+      streetLimitationParametersService
     );
   }
 

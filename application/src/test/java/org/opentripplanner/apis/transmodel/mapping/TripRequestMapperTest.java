@@ -133,8 +133,8 @@ public class TripRequestMapperTest implements PlanTestConstants {
       TIMETABLE_REPOSITORY,
       TRANSFER_REPOSITORY,
       new DefaultFareService(),
-      null,
-      defaultRequest
+      defaultRequest,
+      null
     );
 
     context = new TransmodelRequestContext(
@@ -406,6 +406,31 @@ public class TripRequestMapperTest implements PlanTestConstants {
     Map<String, Object> arguments = arguments(name, 101);
     var req = MAPPER.createRequest(executionContext(arguments));
     assertEquals(Duration.ofSeconds(101), req.preferences().transfer().slack());
+  }
+
+  @Test
+  void testOnBoardLocation() {
+    var fromWithOnBoardLocation = Map.of(
+      "serviceJourneyLocation",
+      Map.of(
+        "datedServiceJourneyReference",
+        Map.of(
+          "serviceJourneyOnServiceDate",
+          Map.of("serviceJourneyId", "F:T1", "serviceDate", LocalDate.of(2024, 11, 1))
+        ),
+        "pointInJourneyPatternReference",
+        Map.of("stopLocationId", "F:stop1")
+      )
+    );
+
+    var arguments = new HashMap<String, Object>();
+    arguments.put("from", fromWithOnBoardLocation);
+    arguments.put("to", Map.of("place", "F:Quay:2"));
+
+    var request = MAPPER.createRequest(executionContext(arguments));
+    var from = request.from();
+    assertNotNull(from);
+    assertNotNull(from.tripLocation());
   }
 
   @Test

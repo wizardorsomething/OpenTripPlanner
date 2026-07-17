@@ -2,6 +2,7 @@ package org.opentripplanner.updater.trip.siri;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
@@ -31,7 +32,7 @@ import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.organization.Agency;
 import org.opentripplanner.transit.model.organization.Operator;
 import org.opentripplanner.transit.model.site.RegularStop;
-import org.opentripplanner.transit.model.timetable.RealTimeState;
+import org.opentripplanner.transit.model.timetable.RealTimeTripTimes;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
 import org.opentripplanner.transit.service.DefaultTransitService;
@@ -138,7 +139,8 @@ class AddedTripBuilderTest {
       SHORT_NAME,
       HEADSIGN,
       List.of(),
-      "DATASOURCE"
+      "DATASOURCE",
+      null
     ).build();
 
     // Assert trip
@@ -197,8 +199,7 @@ class AddedTripBuilderTest {
     var scheduledTimes = pattern.getScheduledTimetable().getTripTimes(trip);
     assertNotNull(scheduledTimes);
     // TODO - is this correct?
-    assertEquals(RealTimeState.SCHEDULED, scheduledTimes.getRealTimeState());
-    assertTrue(scheduledTimes.isScheduled());
+    assertFalse(scheduledTimes.hasAnyUpdates());
     assertEquals(secondsInDay(10, 20), scheduledTimes.getArrivalTime(0));
     assertEquals(secondsInDay(10, 20), scheduledTimes.getDepartureTime(0));
     assertEquals(0, scheduledTimes.getDepartureDelay(0));
@@ -216,8 +217,8 @@ class AddedTripBuilderTest {
     // Assert updated trip times
     var times = tripUpdate.tripTimes();
     assertEquals(trip, times.getTrip());
-    assertEquals(RealTimeState.ADDED, times.getRealTimeState());
-    assertFalse(times.isScheduled());
+    assertTrue(times.isAdded());
+    assertTrue(times.hasAnyUpdates());
     assertEquals(secondsInDay(10, 19), times.getArrivalTime(0));
     assertEquals(secondsInDay(10, 19), times.getDepartureTime(0));
     assertEquals(-60, times.getDepartureDelay(0));
@@ -259,7 +260,8 @@ class AddedTripBuilderTest {
       SHORT_NAME,
       HEADSIGN,
       List.of(),
-      "DATASOURCE"
+      "DATASOURCE",
+      null
     ).build();
 
     assertTrue(firstAddedTrip.routeCreation());
@@ -289,7 +291,8 @@ class AddedTripBuilderTest {
       SHORT_NAME,
       HEADSIGN,
       List.of(),
-      "DATASOURCE"
+      "DATASOURCE",
+      null
     ).build();
 
     // Assert trip
@@ -300,7 +303,7 @@ class AddedTripBuilderTest {
     // Assert trip times
     var times = secondAddedTrip.tripTimes();
     assertEquals(secondTrip, times.getTrip());
-    assertEquals(RealTimeState.ADDED, times.getRealTimeState());
+    assertTrue(times.isAdded());
     assertEquals(secondsInDay(11, 19), times.getArrivalTime(0));
     assertEquals(secondsInDay(11, 19), times.getDepartureTime(0));
     assertEquals(secondsInDay(11, 29), times.getArrivalTime(1));
@@ -331,7 +334,8 @@ class AddedTripBuilderTest {
       SHORT_NAME,
       HEADSIGN,
       List.of(),
-      "DATASOURCE"
+      "DATASOURCE",
+      null
     ).build();
 
     // Assert trip
@@ -365,7 +369,8 @@ class AddedTripBuilderTest {
       SHORT_NAME,
       HEADSIGN,
       List.of(),
-      "DATASOURCE"
+      "DATASOURCE",
+      null
     ).build();
 
     // Assert trip
@@ -409,7 +414,8 @@ class AddedTripBuilderTest {
       SHORT_NAME,
       HEADSIGN,
       List.of(),
-      "DATASOURCE"
+      "DATASOURCE",
+      null
     );
 
     assertFailure(
@@ -462,7 +468,8 @@ class AddedTripBuilderTest {
       SHORT_NAME,
       HEADSIGN,
       List.of(),
-      "DATASOURCE"
+      "DATASOURCE",
+      null
     );
 
     assertFailure(
@@ -501,7 +508,8 @@ class AddedTripBuilderTest {
       SHORT_NAME,
       HEADSIGN,
       List.of(),
-      "DATASOURCE"
+      "DATASOURCE",
+      null
     );
     assertFailure(
       UpdateErrorType.TOO_FEW_STOPS,
@@ -546,7 +554,8 @@ class AddedTripBuilderTest {
       SHORT_NAME,
       HEADSIGN,
       List.of(),
-      "DATASOURCE"
+      "DATASOURCE",
+      null
     );
 
     assertFailure(
@@ -587,6 +596,67 @@ class AddedTripBuilderTest {
     var expectedMode = TransitMode.valueOf(internalMode);
     assertEquals(expectedMode, transitMode, "Mode not mapped to correct internal mode");
     assertEquals(subMode, transitSubMode, "Mode not mapped to correct sub mode");
+  }
+
+  @Test
+  void vehicleRefIsSetOnTripTimes() {
+    var tripUpdate = new AddedTripBuilder(
+      transitService,
+      DEDUPLICATOR,
+      ENTITY_RESOLVER,
+      AbstractTransitEntity::getId,
+      TRIP_ID,
+      DATED_SERVICE_JOURNEY_ID,
+      OPERATOR,
+      LINE_REF,
+      REPLACED_ROUTE,
+      SERVICE_DATE,
+      TRANSIT_MODE,
+      SUB_MODE,
+      getCalls(10),
+      false,
+      null,
+      false,
+      SHORT_NAME,
+      HEADSIGN,
+      List.of(),
+      "DATASOURCE",
+      "BUS-42"
+    ).build();
+
+    var realTimeTimes = assertInstanceOf(RealTimeTripTimes.class, tripUpdate.tripTimes());
+    assertTrue(realTimeTimes.getVehicleId().isPresent());
+    assertEquals("BUS-42", realTimeTimes.getVehicleId().get());
+  }
+
+  @Test
+  void vehicleRefIsNullWhenAbsent() {
+    var tripUpdate = new AddedTripBuilder(
+      transitService,
+      DEDUPLICATOR,
+      ENTITY_RESOLVER,
+      AbstractTransitEntity::getId,
+      TRIP_ID,
+      DATED_SERVICE_JOURNEY_ID,
+      OPERATOR,
+      LINE_REF,
+      REPLACED_ROUTE,
+      SERVICE_DATE,
+      TRANSIT_MODE,
+      SUB_MODE,
+      getCalls(10),
+      false,
+      null,
+      false,
+      SHORT_NAME,
+      HEADSIGN,
+      List.of(),
+      "DATASOURCE",
+      null
+    ).build();
+
+    var realTimeTimes = assertInstanceOf(RealTimeTripTimes.class, tripUpdate.tripTimes());
+    assertTrue(realTimeTimes.getVehicleId().isEmpty());
   }
 
   private static List<CallWrapper> getCalls(int hour) {
