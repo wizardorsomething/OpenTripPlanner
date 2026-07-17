@@ -31,6 +31,8 @@ import org.opentripplanner.transfer.regular.index.RaptorTransferIndex;
 import org.opentripplanner.transit.model.network.RoutingTripPattern;
 import org.opentripplanner.transit.model.network.grouppriority.TransitGroupPriorityService;
 import org.opentripplanner.utils.time.ServiceDateUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This is the data provider for the Range Raptor search engine. It uses data from the RaptorTransitData,
@@ -38,6 +40,8 @@ import org.opentripplanner.utils.time.ServiceDateUtils;
  * based on walk speed.
  */
 public class RaptorRoutingRequestTransitData implements RaptorTransitDataProvider<TripSchedule> {
+
+  private static final Logger LOG = LoggerFactory.getLogger(RaptorRoutingRequestTransitData.class);
 
   private final RaptorTransitData raptorTransitData;
 
@@ -188,6 +192,7 @@ public class RaptorRoutingRequestTransitData implements RaptorTransitDataProvide
 
   @Override
   public RaptorCostCalculator<TripSchedule> multiCriteriaCostCalculator() {
+    LOG.info("Returned cost calculator");
     return generalizedCostCalculator;
   }
 
