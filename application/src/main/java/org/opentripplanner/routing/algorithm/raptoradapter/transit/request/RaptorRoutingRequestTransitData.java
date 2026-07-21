@@ -23,6 +23,7 @@ import org.opentripplanner.raptor.spi.RaptorTripScheduleReference;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.DefaultSlackProvider;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransitData;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripSchedule;
+import org.opentripplanner.routing.algorithm.raptoradapter.transit.cost.AlternativePathsCostCalculator;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.cost.CostCalculatorFactory;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.GeneralizedCostParametersMapper;
 import org.opentripplanner.routing.api.request.RouteRequest;
@@ -88,7 +89,6 @@ public class RaptorRoutingRequestTransitData implements RaptorTransitDataProvide
     this.transferService = raptorTransitData.getTransferService();
     this.raptorTransitData = raptorTransitData;
     this.transitSearchTimeZero = transitSearchTimeZero;
-
     // Delegate to the creator to construct the needed data structures. The code is messy so
     // it is nice to NOT have it in the class. It isolates this code to only be available at
     // the time of construction
@@ -114,10 +114,20 @@ public class RaptorRoutingRequestTransitData implements RaptorTransitDataProvide
       p -> p.route().getAgency().getId()
     );
 
-    this.generalizedCostCalculator = CostCalculatorFactory.createCostCalculator(
-      mcCostParams,
-      raptorTransitData.getStopBoardAlightTransferCosts()
-    );
+    // @TODO this should be determined by a parameter in the request/config. In any case certainly not here
+    if (OTPFeature.AlternativePaths.isOn()) {
+      LOG.info("Created AP cost calculator");
+      this.generalizedCostCalculator = new AlternativePathsCostCalculator<>(
+        mcCostParams,
+        raptorTransitData.getStopBoardAlightTransferCosts()
+      );
+    } else {
+      LOG.info("Created default cost calculator");
+      this.generalizedCostCalculator = CostCalculatorFactory.createCostCalculator(
+        mcCostParams,
+        raptorTransitData.getStopBoardAlightTransferCosts()
+      );
+    }
 
     this.slackProvider = new DefaultSlackProvider(
       (int) request.preferences().transfer().slack().toSeconds(),
@@ -194,7 +204,6 @@ public class RaptorRoutingRequestTransitData implements RaptorTransitDataProvide
 
   @Override
   public RaptorCostCalculator<TripSchedule> multiCriteriaCostCalculator() {
-    LOG.info("Returned cost calculator");
     return generalizedCostCalculator;
   }
 

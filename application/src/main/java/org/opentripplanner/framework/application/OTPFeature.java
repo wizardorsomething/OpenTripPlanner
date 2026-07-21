@@ -117,6 +117,11 @@ public enum OTPFeature {
     true,
     "Record HTTP response time metrics per client. Requires ActuatorAPI to be enabled."
   ),
+  AlternativePaths(
+    false,
+    true,
+    "Switches from DefaultCostCalculator to AlternativePathsCostCalculator, which is based on availability of onward paths."
+  ),
   AsyncGraphQLFetchers(
     false,
     false,
