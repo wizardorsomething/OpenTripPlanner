@@ -1,7 +1,6 @@
 package org.opentripplanner.raptor.alternativepaths;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.multiCriteria;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.standard;
 
 import java.util.List;
@@ -10,7 +9,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.opentripplanner.raptor.RaptorService;
 import org.opentripplanner.raptor._data.RaptorTestConstants;
-import org.opentripplanner.raptor._data.api.PathUtils;
 import org.opentripplanner.raptor._data.transit.TestTransitData;
 import org.opentripplanner.raptor._data.transit.TestTripSchedule;
 import org.opentripplanner.raptor.api.request.RaptorRequestBuilder;
@@ -65,9 +63,7 @@ public class SingleRouteTest implements RaptorTestConstants {
 
   static List<RaptorModuleTestCase> testCases() {
     var path = "Walk 30s ~ B ~ BUS R1 0:01 0:16 ~ D ~ Walk 20s [0:00:30 0:16:20 15m50s Tₙ0]";
-    return RaptorModuleTestCase.of()
-      .add(standard(), path)
-      .build();
+    return RaptorModuleTestCase.of().add(standard(), path).build();
   }
 
   @ParameterizedTest

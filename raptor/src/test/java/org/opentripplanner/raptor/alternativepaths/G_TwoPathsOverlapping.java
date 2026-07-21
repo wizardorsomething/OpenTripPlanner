@@ -72,8 +72,10 @@ public class G_TwoPathsOverlapping implements RaptorTestConstants {
   }
 
   static List<RaptorModuleTestCase> testCases() {
-    var pathForward = "Walk 30s ~ A ~ BUS R1 0:01 0:05 ~ B ~ BUS R2 0:06 0:20 ~ D ~ Walk 20s [0:00:30 0:20:20 19m50s Tₙ1]";
-    var pathReverse = "Walk 30s ~ A ~ BUS R1 0:01 0:10 ~ C ~ BUS R2 0:11 0:20 ~ D ~ Walk 20s [0:00:30 0:20:20 19m50s Tₙ1]";
+    var pathForward =
+      "Walk 30s ~ A ~ BUS R1 0:01 0:05 ~ B ~ BUS R2 0:06 0:20 ~ D ~ Walk 20s [0:00:30 0:20:20 19m50s Tₙ1]";
+    var pathReverse =
+      "Walk 30s ~ A ~ BUS R1 0:01 0:10 ~ C ~ BUS R2 0:11 0:20 ~ D ~ Walk 20s [0:00:30 0:20:20 19m50s Tₙ1]";
     return RaptorModuleTestCase.of()
       .add(standard().forwardOnly(), pathForward)
       .add(standard().reverseOnly(), pathReverse)
