@@ -32,7 +32,9 @@ public enum RaptorProfile {
    * The path is not kept, because this potentially creates paths which is not possible; Hence,
    * can not be constructed.
    */
-  MIN_TRAVEL_DURATION("MinTravelDuration", true);
+  MIN_TRAVEL_DURATION("MinTravelDuration", true),
+
+  MULTI_CRITERIA_AP("AlternativePaths", true);
 
   private final boolean supportsConstrainedTransfers;
 

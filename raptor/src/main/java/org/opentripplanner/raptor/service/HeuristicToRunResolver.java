@@ -1,6 +1,7 @@
 package org.opentripplanner.raptor.service;
 
 import static org.opentripplanner.raptor.api.request.RaptorProfile.MULTI_CRITERIA;
+import static org.opentripplanner.raptor.api.request.RaptorProfile.MULTI_CRITERIA_AP;
 import static org.opentripplanner.raptor.api.request.RaptorProfile.STANDARD;
 
 import org.opentripplanner.raptor.api.request.RaptorRequest;
@@ -17,7 +18,7 @@ class HeuristicToRunResolver {
     Runnable turnFwdOn,
     Runnable turnRevOn
   ) {
-    if (!req.profile().isOneOf(STANDARD, MULTI_CRITERIA)) {
+    if (!req.profile().isOneOf(STANDARD, MULTI_CRITERIA, MULTI_CRITERIA_AP)) {
       return;
     }
     boolean forward = false;
@@ -26,7 +27,7 @@ class HeuristicToRunResolver {
     // Alias for continence
     final SearchParams s = req.searchParams();
 
-    if (req.profile().is(MULTI_CRITERIA)) {
+    if (req.profile().isOneOf(MULTI_CRITERIA, MULTI_CRITERIA_AP)) {
       // REV heuristics is required to do destination pruning
       if (req.useDestinationPruning()) {
         reverse = true;

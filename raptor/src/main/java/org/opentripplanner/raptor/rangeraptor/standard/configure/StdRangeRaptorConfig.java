@@ -102,7 +102,9 @@ public class StdRangeRaptorConfig<T extends RaptorTripSchedule> {
         ctx.calculator(),
         ctx.lifeCycle()
       );
-      case MULTI_CRITERIA -> throw new IllegalArgumentException(ctx.profile().toString());
+      case MULTI_CRITERIA, MULTI_CRITERIA_AP -> throw new IllegalArgumentException(
+        ctx.profile().toString()
+      );
     };
   }
 
@@ -137,7 +139,9 @@ public class StdRangeRaptorConfig<T extends RaptorTripSchedule> {
     return switch (ctx.profile()) {
       case STANDARD -> stdStopArrivalsState();
       case BEST_TIME, MIN_TRAVEL_DURATION -> createBestTimeStopArrivalsState();
-      case MULTI_CRITERIA -> throw new IllegalArgumentException(ctx.profile().toString());
+      case MULTI_CRITERIA, MULTI_CRITERIA_AP -> throw new IllegalArgumentException(
+        ctx.profile().toString()
+      );
     };
   }
 

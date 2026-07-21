@@ -1,6 +1,7 @@
 package org.opentripplanner.raptor.service;
 
 import static org.opentripplanner.raptor.api.request.RaptorProfile.MULTI_CRITERIA;
+import static org.opentripplanner.raptor.api.request.RaptorProfile.MULTI_CRITERIA_AP;
 import static org.opentripplanner.raptor.service.HeuristicToRunResolver.resolveHeuristicToRunBasedOnOptimizationsAndSearchParameters;
 import static org.opentripplanner.raptor.spi.SearchDirection.FORWARD;
 import static org.opentripplanner.raptor.spi.SearchDirection.REVERSE;
@@ -138,7 +139,7 @@ public class RangeRaptorDynamicSearch<T extends RaptorTripSchedule> {
     RaptorRouter<T> raptorRouter;
 
     // Create worker
-    if (request.profile().is(MULTI_CRITERIA)) {
+    if (request.profile().isOneOf(MULTI_CRITERIA, MULTI_CRITERIA_AP)) {
       raptorRouter = config.createRangeRaptorWithMcWorker(
         transitData,
         request,

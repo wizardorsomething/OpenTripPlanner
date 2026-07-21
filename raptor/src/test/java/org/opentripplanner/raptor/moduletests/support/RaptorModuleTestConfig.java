@@ -2,6 +2,7 @@ package org.opentripplanner.raptor.moduletests.support;
 
 import static org.opentripplanner.raptor.api.request.RaptorProfile.MIN_TRAVEL_DURATION;
 import static org.opentripplanner.raptor.api.request.RaptorProfile.MULTI_CRITERIA;
+import static org.opentripplanner.raptor.api.request.RaptorProfile.MULTI_CRITERIA_AP;
 import static org.opentripplanner.raptor.api.request.RaptorProfile.STANDARD;
 
 import java.util.List;
@@ -29,7 +30,8 @@ public enum RaptorModuleTestConfig {
   TC_MIN_DURATION(MIN_TRAVEL_DURATION, true, false),
   TC_MIN_DURATION_REV(MIN_TRAVEL_DURATION, true, true),
   TC_MULTI_CRITERIA(MULTI_CRITERIA, false, false),
-  TC_MULTI_CRITERIA_DEST_PRUNING(MULTI_CRITERIA, false, false);
+  TC_MULTI_CRITERIA_DEST_PRUNING(MULTI_CRITERIA, false, false),
+  TC_MULTI_CRITERIA_AP(MULTI_CRITERIA_AP, false, false);
 
   private final RaptorProfile profile;
   private final boolean oneIteration;
@@ -48,6 +50,10 @@ public enum RaptorModuleTestConfig {
   public static final List<RaptorModuleTestConfig> MULTI_CRITERIA_LIST = List.of(
     TC_MULTI_CRITERIA,
     TC_MULTI_CRITERIA_DEST_PRUNING
+  );
+
+  public static final List<RaptorModuleTestConfig> MULTI_CRITERIA_AP_LIST = List.of(
+    TC_MULTI_CRITERIA_AP
   );
 
   RaptorModuleTestConfig(RaptorProfile profile, boolean oneIteration, boolean reverse) {
@@ -82,6 +88,10 @@ public enum RaptorModuleTestConfig {
 
   public static RaptorModuleTestConfigSetBuilder multiCriteria() {
     return new RaptorModuleTestConfigSetBuilder(MULTI_CRITERIA_LIST);
+  }
+
+  public static RaptorModuleTestConfigSetBuilder multiCriteriaAP() {
+    return new RaptorModuleTestConfigSetBuilder(MULTI_CRITERIA_AP_LIST);
   }
 
   public <T extends RaptorTripSchedule> RaptorRequestBuilder<T> apply(

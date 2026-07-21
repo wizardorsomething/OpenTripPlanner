@@ -93,7 +93,7 @@ public class RaptorRequest<T extends RaptorTripSchedule> {
    * configured wrong.
    */
   public boolean isDynamicSearch() {
-    if (profile().is(RaptorProfile.MULTI_CRITERIA)) {
+    if (profile().isOneOf(RaptorProfile.MULTI_CRITERIA, RaptorProfile.MULTI_CRITERIA_AP)) {
       return true;
     }
     if (profile.is(RaptorProfile.STANDARD)) {
