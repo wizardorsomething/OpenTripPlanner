@@ -6,6 +6,7 @@ import java.util.BitSet;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
@@ -60,8 +61,15 @@ public class TestTransitData
 
   private RaptorSlackProvider slackProvider = SLACK_PROVIDER;
 
+  private RaptorCostCalculator<TestTripSchedule> costCalculator = null;
+
   public TestTransitData() {
     setUpDebugToStdErr();
+  }
+
+  public TestTransitData withCostCalculator(RaptorCostCalculator<TestTripSchedule> calculator) {
+    this.costCalculator = calculator;
+    return this;
   }
 
   public TestTransitData access(String... accessList) {
@@ -130,12 +138,12 @@ public class TestTransitData
 
   @Override
   public RaptorCostCalculator<TestTripSchedule> multiCriteriaCostCalculator() {
-    return new TestCostCalculator(
+    return Objects.requireNonNullElseGet(this.costCalculator, () -> new TestCostCalculator(
       boardCostSec,
       transferCostSec,
       waitReluctance,
       stopBoardAlightTransferCosts()
-    );
+    ));
   }
 
   @Override
