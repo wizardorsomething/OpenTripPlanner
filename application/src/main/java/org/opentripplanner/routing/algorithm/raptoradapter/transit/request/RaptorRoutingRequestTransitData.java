@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.opentripplanner.framework.application.OTPFeature;
+import org.opentripplanner.raptor.extensions.alternativepaths.AlternativePathsCostCalculator;
 import org.opentripplanner.raptor.spi.IntIterator;
 import org.opentripplanner.raptor.spi.IntIterators;
 import org.opentripplanner.raptor.spi.RaptorConstrainedBoardingSearch;
@@ -23,7 +24,6 @@ import org.opentripplanner.raptor.spi.RaptorTripScheduleReference;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.DefaultSlackProvider;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransitData;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripSchedule;
-import org.opentripplanner.routing.algorithm.raptoradapter.transit.cost.AlternativePathsCostCalculator;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.cost.CostCalculatorFactory;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.GeneralizedCostParametersMapper;
 import org.opentripplanner.routing.api.request.RouteRequest;
@@ -114,12 +114,9 @@ public class RaptorRoutingRequestTransitData implements RaptorTransitDataProvide
       p -> p.route().getAgency().getId()
     );
 
-    // @TODO this should be determined by a parameter in the request/config. In any case certainly not here
     if (OTPFeature.AlternativePaths.isOn()) {
-      LOG.info("Created AP cost calculator");
       this.generalizedCostCalculator = new AlternativePathsCostCalculator<>(
-        mcCostParams,
-        raptorTransitData.getStopBoardAlightTransferCosts()
+        this.activeTripPatternsPerStop
       );
     } else {
       LOG.info("Created default cost calculator");
