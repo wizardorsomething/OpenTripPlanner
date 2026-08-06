@@ -1,6 +1,7 @@
 ## Building this version
 - bash get_hsl_files.sh (this is tho get current hsl data, but will not rebuild the graph.obj)
-- mvn clean package -Dskiptests (actual building)
+- mvn --% package -Dmaven.test.skip=true -PprettierSkip -Dcheckstyle.skip=true (actual building)
+- mvn clean package (clean and with all tests)
 - java -Xmx8G -jar otp-shaded\target\otp-shaded-2.10.0-SNAPSHOT.jar --build --save .\hsl (this is if the graph.obj needs to be updated)
 
 ## Running it
