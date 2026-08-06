@@ -2,7 +2,6 @@ package org.opentripplanner.raptor.alternativepaths;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.multiCriteriaAP;
-import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.standard;
 
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -10,7 +9,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.opentripplanner.raptor.RaptorService;
 import org.opentripplanner.raptor._data.RaptorTestConstants;
-import org.opentripplanner.raptor._data.api.PathUtils;
 import org.opentripplanner.raptor._data.transit.TestTransitData;
 import org.opentripplanner.raptor._data.transit.TestTripSchedule;
 import org.opentripplanner.raptor.api.request.RaptorRequestBuilder;
@@ -20,11 +18,10 @@ import org.opentripplanner.raptor.moduletests.support.RaptorModuleTestCase;
 /**
  * FEATURE UNDER TEST
  * <p>
- * With two alternatives departing at the same time, with one transfer each
- * - RAPTOR should choose the one arriving first
- * - RAPTOR with criterion should choose the one arriving first
+ * Raptor should return a path if it exists for the most basic case with one route with one trip, an
+ * access and an egress path.
  */
-public class A_TwoPaths implements RaptorTestConstants {
+public class PathCountTest implements RaptorTestConstants {
 
   private final TestTransitData data = new TestTransitData();
   private final RaptorRequestBuilder<TestTripSchedule> requestBuilder = data.requestBuilder();
@@ -38,7 +35,6 @@ public class A_TwoPaths implements RaptorTestConstants {
    *
    * Schedule:
    *   R1: 00:01 - 00:06 - 00:16
-   *   R2: 00:01 - 00:08 - 00:10
    *
    * Access (toStop & duration):
    *   1  30s
@@ -49,24 +45,18 @@ public class A_TwoPaths implements RaptorTestConstants {
   @BeforeEach
   void setup() {
     data
-      .access("Walk 30s ~ A")
+      .access("Walk 1s ~ B")
       .withTimetables(
         """
         -- R1
-        A      B
-        00:01  00:06
+        B      C      D
+        00:01  00:06  00:16
         -- R2
-               B              D
-               00:07          00:17
-        -- R3
-        A             C
-        00:01         00:08
-        -- R4
-                      C       D
-                      00:09   00:11
+        B      E      D
+        00:03  00:10  00:20
         """
       )
-      .egress("D ~ Walk 20s");
+      .egress("D ~ Walk 1s");
 
     requestBuilder
       .searchParams()
@@ -76,12 +66,8 @@ public class A_TwoPaths implements RaptorTestConstants {
   }
 
   static List<RaptorModuleTestCase> testCases() {
-    var path =
-      "Walk 30s ~ A ~ BUS R3 0:01 0:08 ~ C ~ BUS R4 0:09 0:11 ~ D ~ Walk 20s [0:00:30 0:11:20 10m50s Tₙ1 C₁1_900]";
-    return RaptorModuleTestCase.of()
-      .add(standard(), PathUtils.withoutCost(path))
-      .add(multiCriteriaAP(), path)
-      .build();
+    var path = "Walk 30s ~ B ~ BUS R1 0:01 0:16 ~ D ~ Walk 20s [0:00:30 0:16:20 15m50s Tₙ0 C₁1]";
+    return RaptorModuleTestCase.of().add(multiCriteriaAP(), path).build();
   }
 
   @ParameterizedTest
