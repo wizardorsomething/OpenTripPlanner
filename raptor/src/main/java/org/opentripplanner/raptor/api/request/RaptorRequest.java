@@ -204,7 +204,7 @@ public class RaptorRequest<T extends RaptorTripSchedule> {
 
   private void verify() {
     searchParams.verify();
-    if (!profile.is(RaptorProfile.MULTI_CRITERIA)) {
+    if (!profile.isOneOf(RaptorProfile.MULTI_CRITERIA, RaptorProfile.MULTI_CRITERIA_AP)) {
       if (useDestinationPruning()) {
         LOG.warn("Destination pruning is only supported using McRangeRaptor");
       }
