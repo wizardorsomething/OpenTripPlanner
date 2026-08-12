@@ -8,6 +8,7 @@ import java.util.Iterator;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.opentripplanner.framework.application.OTPFeature;
+import org.opentripplanner.raptor.api.request.RaptorProfile;
 import org.opentripplanner.raptor.extensions.alternativepaths.AlternativePathsCostCalculator;
 import org.opentripplanner.raptor.spi.IntIterator;
 import org.opentripplanner.raptor.spi.IntIterators;
@@ -114,7 +115,8 @@ public class RaptorRoutingRequestTransitData implements RaptorTransitDataProvide
       p -> p.route().getAgency().getId()
     );
 
-    if (OTPFeature.AlternativePaths.isOn()) {
+    if (request.preferences().transit().raptor().profile() == RaptorProfile.MULTI_CRITERIA_AP) {
+      LOG.info("Created Alternative Paths cost calculator");
       this.generalizedCostCalculator = new AlternativePathsCostCalculator<>(
         this.activeTripPatternsPerStop
       );
