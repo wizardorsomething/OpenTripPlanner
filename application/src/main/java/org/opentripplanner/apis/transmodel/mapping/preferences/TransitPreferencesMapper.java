@@ -5,10 +5,16 @@ import java.util.Map;
 import org.opentripplanner.apis.transmodel.model.TransportModeSlack;
 import org.opentripplanner.apis.transmodel.model.plan.RelaxCostType;
 import org.opentripplanner.apis.transmodel.support.DataFetcherDecorator;
+import org.opentripplanner.framework.application.OTPFeature;
+import org.opentripplanner.raptor.api.request.RaptorProfile;
 import org.opentripplanner.routing.api.request.framework.CostLinearFunction;
 import org.opentripplanner.routing.api.request.preference.TransitPreferences;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TransitPreferencesMapper {
+
+  private static final Logger LOG = LoggerFactory.getLogger(TransitPreferencesMapper.class);
 
   public static void mapTransitPreferences(
     TransitPreferences.Builder transit,
@@ -31,6 +37,9 @@ public class TransitPreferencesMapper {
         TransportModeSlack.mapIntoDomain(builder, v)
       );
     });
+    if (OTPFeature.AlternativePaths.isOn()) {
+      transit.withRaptor(b -> b.withProfile(RaptorProfile.MULTI_CRITERIA_AP));
+    }
     callWith.argument("ignoreRealtimeUpdates", transit::withIgnoreRealtimeUpdates);
     callWith.argument("includePlannedCancellations", transit::withIncludePlannedCancellations);
     callWith.argument("includeRealtimeCancellations", transit::withIncludeRealtimeCancellations);

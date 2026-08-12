@@ -9,6 +9,8 @@ import org.opentripplanner.apis.gtfs.generated.GraphQLTypes;
 import org.opentripplanner.apis.gtfs.mapping.TransitModeMapper;
 import org.opentripplanner.apis.support.InvalidInputException;
 import org.opentripplanner.core.model.basic.Cost;
+import org.opentripplanner.framework.application.OTPFeature;
+import org.opentripplanner.raptor.api.request.RaptorProfile;
 import org.opentripplanner.routing.api.request.framework.CostLinearFunction;
 import org.opentripplanner.routing.api.request.preference.TransferPreferences;
 import org.opentripplanner.routing.api.request.preference.TransitPreferences;
@@ -43,6 +45,10 @@ public class TransitPreferencesMapper {
     var transitArgs = args.getGraphQLPreferences().getGraphQLTransit();
     if (transitArgs == null) {
       return;
+    }
+
+    if (OTPFeature.AlternativePaths.isOn()) {
+      transitPreferences.withRaptor(b -> b.withProfile(RaptorProfile.MULTI_CRITERIA_AP));
     }
 
     var relax = transitArgs.getGraphQLRelaxTransitGroupPriority();
