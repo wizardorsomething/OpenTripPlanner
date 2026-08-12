@@ -71,6 +71,6 @@ public enum RaptorProfile {
   }
 
   public boolean producesGeneralizedCost() {
-    return is(MULTI_CRITERIA);
+    return is(MULTI_CRITERIA) || is(MULTI_CRITERIA_AP);
   }
 }

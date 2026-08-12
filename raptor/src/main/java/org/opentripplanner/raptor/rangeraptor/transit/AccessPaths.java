@@ -78,7 +78,7 @@ public class AccessPaths {
 
     paths = split.get(false);
 
-    if (profile.is(RaptorProfile.MULTI_CRITERIA)) {
+    if (profile.isOneOf(RaptorProfile.MULTI_CRITERIA, RaptorProfile.MULTI_CRITERIA_AP)) {
       paths = removeNonOptimalPathsForMcRaptor(paths);
     } else {
       paths = removeNonOptimalPathsForStandardRaptor(paths);

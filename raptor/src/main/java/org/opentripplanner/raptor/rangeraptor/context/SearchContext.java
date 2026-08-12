@@ -247,7 +247,7 @@ public class SearchContext<T extends RaptorTripSchedule> {
   ) {
     var paths = getAccess ? searchParams.accessPaths() : searchParams.egressPaths();
 
-    if (profile.is(RaptorProfile.MULTI_CRITERIA)) {
+    if (profile.isOneOf(RaptorProfile.MULTI_CRITERIA, RaptorProfile.MULTI_CRITERIA_AP)) {
       return paths;
     }
 

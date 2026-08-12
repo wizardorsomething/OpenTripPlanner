@@ -1,6 +1,7 @@
 package org.opentripplanner.raptor.rangeraptor.transit;
 
 import static org.opentripplanner.raptor.api.request.RaptorProfile.MULTI_CRITERIA;
+import static org.opentripplanner.raptor.api.request.RaptorProfile.MULTI_CRITERIA_AP;
 import static org.opentripplanner.raptor.rangeraptor.transit.AccessEgressFunctions.groupByStop;
 import static org.opentripplanner.raptor.rangeraptor.transit.AccessEgressFunctions.removeNonOptimalPathsForMcRaptor;
 import static org.opentripplanner.raptor.rangeraptor.transit.AccessEgressFunctions.removeNonOptimalPathsForStandardRaptor;
@@ -34,7 +35,7 @@ public class EgressPaths {
   public static EgressPaths create(Collection<RaptorAccessEgress> paths, RaptorProfile profile) {
     paths = decorateWithTimePenaltyLogic(paths);
 
-    if (MULTI_CRITERIA.is(profile)) {
+    if (MULTI_CRITERIA.is(profile) || MULTI_CRITERIA_AP.is(profile)) {
       paths = removeNonOptimalPathsForMcRaptor(paths);
     } else {
       paths = removeNonOptimalPathsForStandardRaptor(paths);
