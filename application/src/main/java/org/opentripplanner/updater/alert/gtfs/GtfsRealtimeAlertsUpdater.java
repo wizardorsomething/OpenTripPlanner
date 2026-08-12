@@ -8,9 +8,11 @@ import org.opentripplanner.framework.io.OtpHttpClient;
 import org.opentripplanner.framework.io.OtpHttpClientFactory;
 import org.opentripplanner.routing.impl.TransitAlertServiceImpl;
 import org.opentripplanner.routing.services.TransitAlertService;
-import org.opentripplanner.transit.service.TimetableRepository;
+import org.opentripplanner.transit.service.TransitRepository;
+import org.opentripplanner.updater.TransitRealTimeUpdateContext;
 import org.opentripplanner.updater.alert.TransitAlertProvider;
 import org.opentripplanner.updater.spi.PollingGraphUpdater;
+import org.opentripplanner.updater.spi.WriteDomain;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +20,9 @@ import org.slf4j.LoggerFactory;
 /**
  * GTFS-RT alerts updater
  */
-public class GtfsRealtimeAlertsUpdater extends PollingGraphUpdater implements TransitAlertProvider {
+public class GtfsRealtimeAlertsUpdater
+  extends PollingGraphUpdater<TransitRealTimeUpdateContext>
+  implements TransitAlertProvider {
 
   private static final Logger LOG = LoggerFactory.getLogger(GtfsRealtimeAlertsUpdater.class);
 
@@ -31,12 +35,12 @@ public class GtfsRealtimeAlertsUpdater extends PollingGraphUpdater implements Tr
 
   public GtfsRealtimeAlertsUpdater(
     GtfsRealtimeAlertsUpdaterParameters config,
-    TimetableRepository timetableRepository
+    TransitRepository transitRepository
   ) {
     super(config);
     this.url = config.url();
     this.headers = HttpHeaders.of().acceptProtobuf().add(config.headers()).build();
-    TransitAlertService transitAlertService = new TransitAlertServiceImpl(timetableRepository);
+    TransitAlertService transitAlertService = new TransitAlertServiceImpl(transitRepository);
 
     this.transitAlertService = transitAlertService;
 
@@ -50,6 +54,11 @@ public class GtfsRealtimeAlertsUpdater extends PollingGraphUpdater implements Tr
 
   public TransitAlertService getTransitAlertService() {
     return transitAlertService;
+  }
+
+  @Override
+  public WriteDomain<TransitRealTimeUpdateContext> writeDomain() {
+    return WriteDomain.TRANSIT;
   }
 
   @Override
