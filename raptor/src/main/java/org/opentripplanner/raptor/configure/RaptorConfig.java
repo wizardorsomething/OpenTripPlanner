@@ -5,6 +5,8 @@ import javax.annotation.Nullable;
 import org.opentripplanner.raptor.api.request.RaptorEnvironment;
 import org.opentripplanner.raptor.api.request.RaptorRequest;
 import org.opentripplanner.raptor.api.request.RaptorTuningParameters;
+import org.opentripplanner.raptor.extensions.alternativepaths.PreprocessingRangeRaptor;
+import org.opentripplanner.raptor.extensions.alternativepaths.PreprocessingRangeRaptorWorker;
 import org.opentripplanner.raptor.extensions.extrasearch.ExtraMcRouterSearch;
 import org.opentripplanner.raptor.rangeraptor.ConcurrentCompositeRaptorRouter;
 import org.opentripplanner.raptor.rangeraptor.DefaultRangeRaptorWorker;
@@ -45,6 +47,36 @@ public class RaptorConfig<T extends RaptorTripSchedule> {
 
   public SearchContext<T> context(RaptorTransitDataProvider<T> transit, RaptorRequest<T> request) {
     return SearchContext.of(request, tuningParameters, transit).build();
+  }
+
+  public PreprocessingRangeRaptor<T> createPreprocessingRangeRaptor(
+    RaptorTransitDataProvider<T> transitData,
+    RaptorRequest<T> request
+  ) {
+    var context = context(transitData, request);
+    var stdConfig = new StdRangeRaptorConfig<>(context);
+    var ctx = context.segments().getFirst().parent();
+    var worker = new PreprocessingRangeRaptorWorker<>(
+      stdConfig.resolveState(),
+      stdConfig.strategy(),
+      ctx.transitData(),
+      ctx.slackProvider(),
+      context.segments().getFirst().accessPaths(),
+      ctx.calculator(),
+      ctx.lifeCycle(),
+      ctx.performanceTimers(),
+      ctx.useConstrainedTransfers()
+    );
+    return new PreprocessingRangeRaptor<>(
+        worker,
+        ctx.transitData(),
+        ctx.segments().getFirst().accessPaths(),
+        ctx.roundTracker(),
+        ctx.calculator(),
+        ctx.createLifeCyclePublisher(),
+        ctx.performanceTimers(),
+        environment.timeoutHook()
+      );
   }
 
   public RaptorRouter<T> createRangeRaptorWithStdWorker(

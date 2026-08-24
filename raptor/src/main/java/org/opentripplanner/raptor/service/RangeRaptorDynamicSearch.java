@@ -1,5 +1,6 @@
 package org.opentripplanner.raptor.service;
 
+import static org.opentripplanner.raptor.api.request.RaptorProfile.MIN_TRAVEL_DURATION;
 import static org.opentripplanner.raptor.api.request.RaptorProfile.MULTI_CRITERIA;
 import static org.opentripplanner.raptor.api.request.RaptorProfile.MULTI_CRITERIA_AP;
 import static org.opentripplanner.raptor.service.HeuristicToRunResolver.resolveHeuristicToRunBasedOnOptimizationsAndSearchParameters;
@@ -18,6 +19,7 @@ import org.opentripplanner.raptor.api.request.SearchParams;
 import org.opentripplanner.raptor.api.request.SearchParamsBuilder;
 import org.opentripplanner.raptor.api.response.RaptorResponse;
 import org.opentripplanner.raptor.configure.RaptorConfig;
+import org.opentripplanner.raptor.extensions.alternativepaths.AlternativePathsCostCalculator;
 import org.opentripplanner.raptor.extensions.extrasearch.ExtraMcRouterSearch;
 import org.opentripplanner.raptor.rangeraptor.internalapi.Heuristics;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RaptorRouter;
@@ -79,6 +81,31 @@ public class RangeRaptorDynamicSearch<T extends RaptorTripSchedule> {
 
       // Set search-window and other dynamic calculated parameters
       var dynamicRequest = requestWithDynamicSearchParams(originalRequest);
+
+      if (dynamicRequest.profile().is(MULTI_CRITERIA_AP)) {
+        var builder = dynamicRequest
+          .mutate()
+          // Disable any optimization that is not valid for a heuristic search
+          .clearOptimizations()
+          .profile(MIN_TRAVEL_DURATION)
+          .searchDirection(REVERSE);
+        builder.searchParams()
+          .latestArrivalTime(
+            transitData.getValidTransitDataEndTime() +
+              dynamicRequest.searchParams().accessEgressMaxDurationSeconds()
+          );
+        builder.searchParams().searchOneIterationOnly();
+        // Add this last, it depends on generating an alias from the set values
+        builder.performanceTimers(
+          dynamicRequest.performanceTimers().withNamePrefix(builder.generateAlias())
+        );
+        RaptorRequest<T> backwardRequest = builder.build();
+        var backwardRouter = config.createPreprocessingRangeRaptor(transitData, backwardRequest);
+        backwardRouter.route();
+        var routesTouched = backwardRouter.touchedRoutes();
+
+        ((AlternativePathsCostCalculator) transitData.multiCriteriaCostCalculator()).applyRoutes(routesTouched);
+      }
 
       return createAndRunDynamicRRWorker(dynamicRequest);
     } catch (DestinationNotReachedException e) {
