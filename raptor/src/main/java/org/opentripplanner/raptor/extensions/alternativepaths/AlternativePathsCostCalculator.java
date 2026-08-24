@@ -1,11 +1,19 @@
 package org.opentripplanner.raptor.extensions.alternativepaths;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import org.opentripplanner.raptor.spi.RaptorCostCalculator;
+import org.opentripplanner.raptor.spi.RaptorRoute;
 import org.opentripplanner.raptor.spi.RaptorTransferConstraint;
+import org.opentripplanner.raptor.spi.RaptorTransitDataProvider;
 import org.opentripplanner.raptor.spi.RaptorTripSchedule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+record StopTimeEntry<T extends RaptorTripSchedule>(T trip, int arrivalTime, int departureTime) {};
 
 /**
  * The responsibility for the cost calculator is to calculate the default multi-criteria cost.
@@ -16,24 +24,52 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
   implements RaptorCostCalculator<T> {
 
   private static final Logger LOG = LoggerFactory.getLogger(AlternativePathsCostCalculator.class);
-  private final List<int[]> activeTripPatternsPerStop;
-  private final int maxTripPatternCount;
+
+  private final RaptorTransitDataProvider<T> transitData;
+  private final Map<Integer, List<StopTimeEntry<T>>> tripsByStop;
+  private int minAlternatives;
+  private int maxAlternatives;
 
   /**
    * Cost unit: SECONDS - The unit for all input parameters are in the OTP TRANSIT model cost unit
    * (in Raptor the unit for cost is centi-seconds).
    */
-  public AlternativePathsCostCalculator(List<int[]> activeTripPatternsPerStop) {
-    this.activeTripPatternsPerStop = activeTripPatternsPerStop;
-    int max = 0;
-    for (int[] arr : activeTripPatternsPerStop) {
-      if (arr.length > max) {
-        max = arr.length;
+  public AlternativePathsCostCalculator(RaptorTransitDataProvider<T> transitData, List<? extends RaptorRoute<T>> routes) {
+    this.transitData = transitData;
+    tripsByStop = new HashMap<>();
+  }
+
+  public void applyRoutes(HashSet<RaptorRoute<T>> routes) {
+    for (RaptorRoute<T> route : routes) {
+      var timetable = route.timetable();
+      var pattern = route.pattern();
+      int nStops = pattern.numberOfStopsInPattern();
+      int nTrips = timetable.numberOfTripSchedules();
+      // LOG.info("Route: {}", route.pattern().debugInfo());
+      // LOG.info("nStops: {}", nStops);
+      // LOG.info("nTrips: {}", nTrips);
+      for (int j = 0; j < nStops; j++) {
+        for (int k = 0; k < nTrips; k++) {
+          T trip = timetable.getTripSchedule(k);
+          tripsByStop.computeIfAbsent(pattern.stopIndex(j), id -> new ArrayList<>()).add(new StopTimeEntry<>(trip, trip.arrival(j), trip.departure(j)));
+        }
       }
     }
-    this.maxTripPatternCount = max;
-    LOG.info("Created an AP Cost Calculator");
-    LOG.info("Max trip pattern count: {}", maxTripPatternCount);
+    LOG.info("Number of routes: {}", routes.size());
+    LOG.info("Number of stops: {}", tripsByStop.size());
+    minAlternatives = Integer.MAX_VALUE;
+    maxAlternatives = 0;
+    for (List<StopTimeEntry<T>> trips : tripsByStop.values()) {
+      int s = trips.size();
+      if (s < minAlternatives) {
+        minAlternatives = s;
+      }
+      if (s > maxAlternatives) {
+        maxAlternatives = s;
+      }
+    }
+    LOG.info("Min alternatives: {}", minAlternatives);
+    LOG.info("Max alternatives: {}", maxAlternatives);
   }
 
   @Override
@@ -72,7 +108,38 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
     T trip,
     int toStopIndex
   ) {
-    return activeTripPatternsPerStop.get(toStopIndex).length * 100;
+    var pattern = trip.pattern();
+    int stopIdInPattern = -1;
+    for (int position = 0; position < pattern.numberOfStopsInPattern(); position++) {
+      if (pattern.stopIndex(position) == toStopIndex) {
+        stopIdInPattern = position;
+      }
+    }
+    return stopCost(toStopIndex, trip.arrival(stopIdInPattern), trip);
+  }
+
+  public int stopCost(
+    int stopIndex,
+    int arrivalTime,
+    T trip
+  ) {
+
+    int count = 0;
+    if (tripsByStop.containsKey(stopIndex)) {
+      for (StopTimeEntry alternative : tripsByStop.get(stopIndex)) {
+        // @TODO only checks if trip is too early, not too late
+        if (alternative.trip() != trip && alternative.departureTime() > arrivalTime) {
+          count += 1;
+        }
+      }
+    } else {
+      // System.out.println(stopIndex);
+      return Integer.MAX_VALUE;
+    }
+    // System.out.println(transitData.stopNameResolver().apply(stopIndex) + ": " + count);
+    // LOG.info("{}: {}", transitData.stopNameResolver().apply(stopIndex), count);
+
+    return count * 100;
   }
 
   @Override
@@ -87,8 +154,8 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
     int fromStopIndex
   ) {
     if (minNumTransfers > -1) {
-      // @TODO this isn't actually a lower bound, just a kinda educated guess
-      return maxTripPatternCount * minNumTransfers;
+      // @TODO not a guaranteed lower bound since it's not filtered
+      return minAlternatives * 100 * minNumTransfers;
     } else {
       // Remove cost that was added during alighting similar as we do in the costEgress() method
       // @TODO What does minNumTransfers <= -1 mean???
