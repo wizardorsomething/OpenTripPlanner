@@ -6,13 +6,14 @@ import java.util.BitSet;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 import org.opentripplanner.raptor._data.RaptorTestConstants;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
+import org.opentripplanner.raptor.api.request.RaptorProfile;
 import org.opentripplanner.raptor.api.request.RaptorRequestBuilder;
+import org.opentripplanner.raptor.extensions.alternativepaths.AlternativePathsCostCalculator;
 import org.opentripplanner.raptor.rangeraptor.SystemErrDebugLogger;
 import org.opentripplanner.raptor.spi.IntIterator;
 import org.opentripplanner.raptor.spi.IntIterators;
@@ -65,11 +66,6 @@ public class TestTransitData
 
   public TestTransitData() {
     setUpDebugToStdErr();
-  }
-
-  public TestTransitData withCostCalculator(RaptorCostCalculator<TestTripSchedule> calculator) {
-    this.costCalculator = calculator;
-    return this;
   }
 
   public TestTransitData access(String... accessList) {
@@ -138,12 +134,19 @@ public class TestTransitData
 
   @Override
   public RaptorCostCalculator<TestTripSchedule> multiCriteriaCostCalculator() {
-    return Objects.requireNonNullElseGet(this.costCalculator, () -> new TestCostCalculator(
-      boardCostSec,
-      transferCostSec,
-      waitReluctance,
-      stopBoardAlightTransferCosts()
-    ));
+    if (costCalculator == null) {
+      if (requestBuilder().profile() == RaptorProfile.MULTI_CRITERIA_AP) {
+        costCalculator = new AlternativePathsCostCalculator<>(this, routes);
+      } else {
+        costCalculator = new TestCostCalculator(
+          boardCostSec,
+          transferCostSec,
+          waitReluctance,
+          stopBoardAlightTransferCosts()
+        );
+      }
+    }
+    return costCalculator;
   }
 
   @Override
