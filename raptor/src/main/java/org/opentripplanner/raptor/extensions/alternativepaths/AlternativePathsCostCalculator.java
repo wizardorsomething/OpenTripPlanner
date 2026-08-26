@@ -13,7 +13,7 @@ import org.opentripplanner.raptor.spi.RaptorTripSchedule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-record StopTimeEntry<T extends RaptorTripSchedule>(T trip, int arrivalTime, int departureTime) {};
+record StopTimeEntry<T extends RaptorTripSchedule>(T trip, int arrivalTime, int departureTime) {}
 
 /**
  * The responsibility for the cost calculator is to calculate the default multi-criteria cost.
@@ -43,7 +43,7 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
     tripToHub = new HashMap<>();
   }
 
-  public void applyRoutes(HashSet<RaptorRoute<T>> routes) {
+  public void applyRoutes(HashSet<RaptorRoute<T>> routes, int earliest, int latest) {
     for (RaptorRoute<T> route : routes) {
       var timetable = route.timetable();
       var pattern = route.pattern();
@@ -55,12 +55,14 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
       var stopNameResolver = transitData.stopNameResolver();
       for (int j = 0; j < nStops; j++) {
         int stopIndex = pattern.stopIndex(j);
-        String hub = stopNameResolver.apply(stopIndex);
-        tripToHub.computeIfAbsent(stopIndex, id -> hub);
+        String hub = stopNameResolver.apply(stopIndex).replaceFirst("\\s?\\(\\d+\\)$", "");
+        tripToHub.computeIfAbsent(stopIndex, _ -> hub);
         for (int k = 0; k < nTrips; k++) {
           T trip = timetable.getTripSchedule(k);
-          tripsByStop.computeIfAbsent(stopIndex, id -> new ArrayList<>()).add(new StopTimeEntry<>(trip, trip.arrival(j), trip.departure(j)));
-          tripsByHub.computeIfAbsent(hub, id -> new ArrayList<>()).add(new StopTimeEntry<>(trip, trip.arrival(j), trip.departure(j)));
+          if (trip.arrival(j) >= earliest && trip.departure(j) <= latest) {
+            tripsByStop.computeIfAbsent(stopIndex, _ -> new ArrayList<>()).add(new StopTimeEntry<>(trip, trip.arrival(j), trip.departure(j)));
+            tripsByHub.computeIfAbsent(hub, _ -> new ArrayList<>()).add(new StopTimeEntry<>(trip, trip.arrival(j), trip.departure(j)));
+          }
         }
       }
     }
@@ -69,6 +71,9 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
     LOG.info("Number of hubs: {}", tripsByHub.size() );
     minAlternatives = Integer.MAX_VALUE;
     maxAlternatives = 0;
+    for (String hub : tripsByHub.keySet()) {
+      LOG.debug("{}: {} alternatives", hub, tripsByHub.get(hub).size());
+    }
     for (List<StopTimeEntry<T>> trips : tripsByHub.values()) {
       int s = trips.size();
       if (s < minAlternatives) {
@@ -136,20 +141,22 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
 
     int count = 0;
     if (tripsByStop.containsKey(stopIndex)) {
-      for (StopTimeEntry alternative : tripsByHub.get(tripToHub.get(stopIndex))) {
-        // @TODO only checks if trip is too early, not too late
+      for (StopTimeEntry<T> alternative : tripsByHub.get(tripToHub.get(stopIndex))) {
         if (alternative.trip() != trip && alternative.departureTime() > arrivalTime) {
           count += 1;
         }
       }
+      if (count > maxAlternatives) {
+        LOG.warn("Impossible alternative count: {}", tripsByHub.get(tripToHub.get(stopIndex)));
+      }
     } else {
       // System.out.println(stopIndex);
-      return Integer.MAX_VALUE;
+      return (maxAlternatives+2) * 100;
     }
     // System.out.println(transitData.stopNameResolver().apply(stopIndex) + ": " + count);
     // LOG.info("{}: {}", transitData.stopNameResolver().apply(stopIndex), count);
 
-    return count * 100;
+    return (maxAlternatives+1 - count) * 100;
   }
 
   @Override

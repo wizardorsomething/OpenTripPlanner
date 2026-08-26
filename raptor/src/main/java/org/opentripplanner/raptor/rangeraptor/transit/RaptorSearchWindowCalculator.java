@@ -58,6 +58,10 @@ public class RaptorSearchWindowCalculator {
     return searchWindowSeconds;
   }
 
+  public int getHeuristicMinTransitTime() {
+    return heuristicMinTransitTime;
+  }
+
   public RaptorSearchWindowCalculator withHeuristics(int minTransitTime, int minWaitTime) {
     this.heuristicMinTransitTime = minTransitTime;
     this.heuristicMinWaitTime = minWaitTime;

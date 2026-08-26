@@ -83,17 +83,18 @@ public class RangeRaptorDynamicSearch<T extends RaptorTripSchedule> {
       var dynamicRequest = requestWithDynamicSearchParams(originalRequest);
 
       if (dynamicRequest.profile().is(MULTI_CRITERIA_AP)) {
+        int timeWindowStart = dynamicSearchWindowCalculator.getEarliestDepartureTime();
+        // @TODO can't (or at least don't know how to) get minimum time including access and egress, so we're just eyeballing it by adding transit time a third time
+        int timeWindowEnd = timeWindowStart + 3 * dynamicSearchWindowCalculator.getHeuristicMinTransitTime();
         var builder = dynamicRequest
           .mutate()
           // Disable any optimization that is not valid for a heuristic search
           .clearOptimizations()
           .profile(MIN_TRAVEL_DURATION)
           .searchDirection(REVERSE);
+        // only consider routes in paths that take at least twice as long as fastest
         builder.searchParams()
-          .latestArrivalTime(
-            transitData.getValidTransitDataEndTime() +
-              dynamicRequest.searchParams().accessEgressMaxDurationSeconds()
-          );
+          .latestArrivalTime(timeWindowEnd);
         builder.searchParams().searchOneIterationOnly();
         // Add this last, it depends on generating an alias from the set values
         builder.performanceTimers(
@@ -103,8 +104,11 @@ public class RangeRaptorDynamicSearch<T extends RaptorTripSchedule> {
         var backwardRouter = config.createPreprocessingRangeRaptor(transitData, backwardRequest);
         backwardRouter.route();
         var routesTouched = backwardRouter.touchedRoutes();
+        LOG.info("SearchParams Start time (minutes): {}", timeWindowStart/60);
+        LOG.info("SearchParams End time (minutes): {}", timeWindowEnd/60);
+        LOG.info("Total time window (minutes): {}", (timeWindowEnd-timeWindowStart)/60);
 
-        ((AlternativePathsCostCalculator) transitData.multiCriteriaCostCalculator()).applyRoutes(routesTouched);
+        ((AlternativePathsCostCalculator) transitData.multiCriteriaCostCalculator()).applyRoutes(routesTouched, timeWindowStart, timeWindowEnd);
       }
 
       return createAndRunDynamicRRWorker(dynamicRequest);
