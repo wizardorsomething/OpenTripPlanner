@@ -84,7 +84,7 @@ public class StdTransferEarlyPruning<T extends RaptorTripSchedule> {
    * Notify early pruning of a new best arrival at {@code stop}. If this is an egress stop, the
    * destination arrival bounds are updated.
    */
-  void updateArrival(int stop, int alightTime) {
+  public void updateArrival(int stop, int alightTime) {
     int egressMinDuration = egressMinDurationByStop.get(stop);
     if (egressMinDuration == NOT_EGRESS) {
       return;
@@ -102,7 +102,7 @@ public class StdTransferEarlyPruning<T extends RaptorTripSchedule> {
    * Returns {@code true} if {@code arrivalTime} is not better than the best known destination
    * arrival time, meaning this transfer — and all subsequent longer ones — can be skipped.
    */
-  boolean exceedsBound(int arrivalTime) {
+  public boolean exceedsBound(int arrivalTime) {
     int bound = bestDestCurrentIteration;
     if (calculator.isBefore(bestDestArrivalByRound[currentRound], bound)) {
       bound = bestDestArrivalByRound[currentRound];
