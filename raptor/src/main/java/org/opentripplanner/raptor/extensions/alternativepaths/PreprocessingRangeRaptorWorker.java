@@ -7,7 +7,6 @@ import org.opentripplanner.raptor.api.debug.RaptorTimers;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RangeRaptorWorker;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RaptorRouterResult;
-import org.opentripplanner.raptor.rangeraptor.internalapi.RaptorWorkerState;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RoutingStrategy;
 import org.opentripplanner.raptor.rangeraptor.internalapi.SlackProvider;
 import org.opentripplanner.raptor.rangeraptor.internalapi.WorkerLifeCycle;
@@ -65,7 +64,7 @@ public final class PreprocessingRangeRaptorWorker<T extends RaptorTripSchedule>
    * object-oriented approach. There were no performance differences(=> GC is not the bottleneck),
    * so we dropped the integer array implementation.
    */
-  private final RaptorWorkerState<T> state;
+  private final PreprocessingRangeRaptorWorkerState<T> state;
 
   private final RaptorTransitDataProvider<T> transitData;
 
@@ -91,7 +90,7 @@ public final class PreprocessingRangeRaptorWorker<T extends RaptorTripSchedule>
    *                    access.
    */
   public PreprocessingRangeRaptorWorker(
-    RaptorWorkerState<T> state,
+    PreprocessingRangeRaptorWorkerState<T> state,
     RoutingStrategy<T> transitWorker,
     RaptorTransitDataProvider<T> transitData,
     SlackProvider slackProvider,
@@ -118,7 +117,12 @@ public final class PreprocessingRangeRaptorWorker<T extends RaptorTripSchedule>
   }
 
   public HashSet<RaptorRoute<T>> getTouchedRoutes() {
-    return touchedRoutes;
+    HashSet<RaptorRoute<T>> result = new HashSet<>();
+    for (int index : state.relevantRoutes()) {
+      result.add(transitData.getRouteForIndex(index));
+    }
+
+    return result;
   }
 
   /**

@@ -1,6 +1,11 @@
 package org.opentripplanner.raptor.extensions.alternativepaths;
 
+import java.util.ArrayDeque;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import javax.annotation.Nullable;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
 import org.opentripplanner.raptor.api.view.TransitArrival;
@@ -66,6 +71,9 @@ public final class PreprocessingRangeRaptorWorkerState<T extends RaptorTripSched
   // null if early pruning is not used
   private final StdTransferEarlyPruning<T> earlyPruning;
 
+  private final HashMap<Integer, HashSet<Integer>> routesByStop;
+  private final HashMap<Integer, HashSet<Integer>> stopsReachingStop;
+  private final List<Integer> egressStops;
   /**
    * create a BestTimes Range Raptor State for the given context.
    */
@@ -75,6 +83,7 @@ public final class PreprocessingRangeRaptorWorkerState<T extends RaptorTripSched
     StopArrivalsState<T> stopArrivalsState,
     BestNumberOfTransfers bestNumberOfTransfers,
     ArrivedAtDestinationCheck arrivedAtDestinationCheck,
+    List<Integer> egressStops,
     @Nullable StdTransferEarlyPruning<T> earlyPruning
   ) {
     this.calculator = calculator;
@@ -83,6 +92,42 @@ public final class PreprocessingRangeRaptorWorkerState<T extends RaptorTripSched
     this.bestNumberOfTransfers = bestNumberOfTransfers;
     this.arrivedAtDestinationCheck = arrivedAtDestinationCheck;
     this.earlyPruning = earlyPruning;
+
+    this.routesByStop = new HashMap<>();
+    this.stopsReachingStop = new HashMap<>();
+    this.egressStops = egressStops;
+  }
+
+  public HashSet<Integer> relevantRoutes() {
+    HashSet<Integer> stops = new HashSet<>();
+    Deque<Integer> stack = new ArrayDeque<>();
+
+    for (int egress : egressStops) {
+      if (stops.add(egress)) {
+        stack.push(egress);
+      }
+    }
+
+    while (!stack.isEmpty()) {
+      int stop = stack.pop();
+      if (stopsReachingStop.containsKey(stop)) {
+        for (int onwardStop : stopsReachingStop.get(stop)) {
+          if (stops.add(onwardStop)) {
+            stack.push(onwardStop);
+          }
+        }
+      }
+    }
+
+    HashSet<Integer> routes = new HashSet<>();
+    for (int stop : stops) {
+      if (routesByStop.containsKey(stop)) {
+        routes.addAll(routesByStop.get(stop));
+      //} else {
+        // System.out.println("Unknown stop: " + stop);
+      }
+    }
+    return routes;
   }
 
   @Override
@@ -175,6 +220,10 @@ public final class PreprocessingRangeRaptorWorkerState<T extends RaptorTripSched
       return;
     }
 
+    int fromStop = trip.pattern().stopIndex(boardStopPosition);
+    stopsReachingStop.computeIfAbsent(stop, _ -> new HashSet<>()).add(fromStop);
+    routesByStop.computeIfAbsent(stop, _ -> new HashSet<>()).add(trip.pattern().patternIndex());
+
     if (newBestTransitArrivalTime(stop, arrivalTime)) {
       // transitTimes upper bounds bestTimes
       final boolean newOverallBestTime = newOverallBestTime(stop, arrivalTime);
@@ -214,6 +263,7 @@ public final class PreprocessingRangeRaptorWorkerState<T extends RaptorTripSched
     }
 
     final int toStop = transfer.stop();
+    stopsReachingStop.computeIfAbsent(toStop, _ -> new HashSet<>()).add(fromStop);
 
     if (newOverallBestTime(toStop, arrivalTime)) {
       stopArrivalsState.setNewBestTransferTime(fromStop, arrivalTime, transfer);

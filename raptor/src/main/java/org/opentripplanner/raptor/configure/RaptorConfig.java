@@ -5,6 +5,7 @@ import javax.annotation.Nullable;
 import org.opentripplanner.raptor.api.request.RaptorEnvironment;
 import org.opentripplanner.raptor.api.request.RaptorRequest;
 import org.opentripplanner.raptor.api.request.RaptorTuningParameters;
+import org.opentripplanner.raptor.extensions.alternativepaths.APConfig;
 import org.opentripplanner.raptor.extensions.alternativepaths.PreprocessingRangeRaptor;
 import org.opentripplanner.raptor.extensions.alternativepaths.PreprocessingRangeRaptorWorker;
 import org.opentripplanner.raptor.extensions.extrasearch.ExtraMcRouterSearch;
@@ -54,11 +55,11 @@ public class RaptorConfig<T extends RaptorTripSchedule> {
     RaptorRequest<T> request
   ) {
     var context = context(transitData, request);
-    var stdConfig = new StdRangeRaptorConfig<>(context);
+    var apConfig = new APConfig<>(context);
     var ctx = context.segments().getFirst().parent();
     var worker = new PreprocessingRangeRaptorWorker<>(
-      stdConfig.resolveState(),
-      stdConfig.strategy(),
+      apConfig.resolveState(),
+      apConfig.strategy(),
       ctx.transitData(),
       ctx.slackProvider(),
       context.segments().getFirst().accessPaths(),
