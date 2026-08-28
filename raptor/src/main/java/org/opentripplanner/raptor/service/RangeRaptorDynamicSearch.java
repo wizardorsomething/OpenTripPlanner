@@ -108,7 +108,7 @@ public class RangeRaptorDynamicSearch<T extends RaptorTripSchedule> {
         LOG.info("SearchParams End time (minutes): {}", timeWindowEnd/60);
         LOG.info("Total time window (minutes): {}", (timeWindowEnd-timeWindowStart)/60);
 
-        ((AlternativePathsCostCalculator) transitData.multiCriteriaCostCalculator()).applyRoutes(routesTouched, timeWindowStart, timeWindowEnd);
+        ((AlternativePathsCostCalculator<T>) transitData.multiCriteriaCostCalculator()).applyRoutes(routesTouched, timeWindowStart, timeWindowEnd);
       }
 
       return createAndRunDynamicRRWorker(dynamicRequest);

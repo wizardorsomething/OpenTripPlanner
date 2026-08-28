@@ -8,10 +8,9 @@ import java.util.Objects;
 import java.util.Set;
 import javax.annotation.Nullable;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
+import org.opentripplanner.raptor.extensions.alternativepaths.counting.PreprocessingRangeRaptorWorkerState;
 import org.opentripplanner.raptor.rangeraptor.context.SearchContext;
-import org.opentripplanner.raptor.rangeraptor.internalapi.Heuristics;
 import org.opentripplanner.raptor.rangeraptor.internalapi.ParetoSetCost;
-import org.opentripplanner.raptor.rangeraptor.internalapi.RaptorRouterResult;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RaptorWorkerState;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RoutingStrategy;
 import org.opentripplanner.raptor.rangeraptor.path.DestinationArrivalPaths;
@@ -26,7 +25,6 @@ import org.opentripplanner.raptor.rangeraptor.standard.besttimes.SimpleArrivedAt
 import org.opentripplanner.raptor.rangeraptor.standard.besttimes.SimpleBestNumberOfTransfers;
 import org.opentripplanner.raptor.rangeraptor.standard.besttimes.UnknownPathFactory;
 import org.opentripplanner.raptor.rangeraptor.standard.debug.DebugStopArrivalsState;
-import org.opentripplanner.raptor.rangeraptor.standard.heuristics.HeuristicsAdapter;
 import org.opentripplanner.raptor.rangeraptor.standard.internalapi.ArrivedAtDestinationCheck;
 import org.opentripplanner.raptor.rangeraptor.standard.internalapi.BestNumberOfTransfers;
 import org.opentripplanner.raptor.rangeraptor.standard.internalapi.StopArrivalsState;
@@ -74,21 +72,6 @@ public class APConfig<T extends RaptorTripSchedule> {
     return strategy;
   }
 
-  public Heuristics createHeuristics(RaptorRouterResult<T> results) {
-    return oneOf(
-      new HeuristicsAdapter(
-        ctx.nStops(),
-        egressPaths(),
-        ctx.calculator(),
-        ctx.costCalculator(),
-        results.extractBestOverallArrivals(),
-        results.extractBestTransitArrivals(),
-        results.extractBestNumberOfTransfers()
-      ),
-      Heuristics.class
-    );
-  }
-
   /* private factory methods */
 
   private RoutingStrategy<T> createWorkerStrategy() {
@@ -115,7 +98,7 @@ public class APConfig<T extends RaptorTripSchedule> {
       var stops = egressPaths().listAll().stream().filter(path -> path.durationInSeconds() < 60 * walkingLimit).map(RaptorAccessEgress::stop).distinct().toList();
       System.out.println("Number of egress stops: " + stops.size());
       this.state = oneOf(
-        new PreprocessingRangeRaptorWorkerState<T>(
+        new PreprocessingRangeRaptorWorkerState<>(
           ctx.calculator(),
           resolveBestTimes(),
           createStopArrivals(),

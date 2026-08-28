@@ -1,4 +1,4 @@
-package org.opentripplanner.raptor.extensions.alternativepaths;
+package org.opentripplanner.raptor.extensions.alternativepaths.counting;
 
 import static java.util.Objects.requireNonNull;
 
