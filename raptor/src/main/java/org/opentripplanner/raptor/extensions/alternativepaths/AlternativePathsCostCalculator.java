@@ -31,12 +31,13 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
   private final Map<Integer, String> tripToHub;
   private int minAlternatives;
   private int maxAlternatives;
+  private final int scalingFactor = 100;
 
   /**
    * Cost unit: SECONDS - The unit for all input parameters are in the OTP TRANSIT model cost unit
    * (in Raptor the unit for cost is centi-seconds).
    */
-  public AlternativePathsCostCalculator(RaptorTransitDataProvider<T> transitData, List<? extends RaptorRoute<T>> routes) {
+  public AlternativePathsCostCalculator(RaptorTransitDataProvider<T> transitData) {
     this.transitData = transitData;
     tripsByStop = new HashMap<>();
     tripsByHub = new HashMap<>();
@@ -56,7 +57,7 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
       for (int j = 0; j < nStops; j++) {
         int stopIndex = pattern.stopIndex(j);
         String hub = stopNameResolver.apply(stopIndex).replaceFirst("\\s?\\(\\d+\\)$", "");
-        tripToHub.computeIfAbsent(stopIndex, _ -> hub);
+        tripToHub.putIfAbsent(stopIndex, hub);
         for (int k = 0; k < nTrips; k++) {
           T trip = timetable.getTripSchedule(k);
           if (trip.arrival(j) >= earliest && trip.departure(j) <= latest) {
@@ -85,6 +86,8 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
     }
     LOG.info("Min alternatives: {}", minAlternatives);
     LOG.info("Max alternatives: {}", maxAlternatives);
+    // System.out.println("Min alternatives: " + minAlternatives);
+    // System.out.println("Max alternatives: " + maxAlternatives);
   }
 
   @Override
@@ -96,18 +99,7 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
     T trip,
     RaptorTransferConstraint transferConstraints
   ) {
-    if (transferConstraints.isRegularTransfer()) {
-      return boardingCostRegularTransfer(firstBoarding, prevArrivalTime, boardStopIndex, boardTime);
-    } else {
-      return boardingCostConstrainedTransfer(
-        prevArrivalTime,
-        boardStopIndex,
-        boardTime,
-        0,
-        firstBoarding,
-        transferConstraints
-      );
-    }
+    return 0;
   }
 
   @Override
@@ -150,13 +142,14 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
         LOG.warn("Impossible alternative count: {}", tripsByHub.get(tripToHub.get(stopIndex)));
       }
     } else {
-      // System.out.println(stopIndex);
-      return (maxAlternatives+2) * 100;
+      // System.out.println("Unknown stop in calculator: " + stopIndex);
+      return (maxAlternatives+1) * scalingFactor;
     }
     // System.out.println(transitData.stopNameResolver().apply(stopIndex) + ": " + count);
     // LOG.info("{}: {}", transitData.stopNameResolver().apply(stopIndex), count);
 
-    return (maxAlternatives+1 - count) * 100;
+    // not +1 because trip itself is always excluded, so there is no risk of getting 0 cost
+    return (maxAlternatives - count) * scalingFactor;
   }
 
   @Override
@@ -172,7 +165,7 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
   ) {
     if (minNumTransfers > -1) {
       // @TODO not a guaranteed lower bound since it's not filtered
-      return minAlternatives * 100 * minNumTransfers;
+      return minAlternatives * scalingFactor * minNumTransfers;
     } else {
       // Remove cost that was added during alighting similar as we do in the costEgress() method
       // @TODO What does minNumTransfers <= -1 mean???
@@ -185,26 +178,4 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
     return 0;
   }
 
-  /** This is public for test purposes only */
-  public int boardingCostRegularTransfer(
-    boolean firstBoarding,
-    int prevArrivalTime,
-    int boardStop,
-    int boardTime
-  ) {
-    return 0;
-  }
-
-  /* private methods */
-
-  private int boardingCostConstrainedTransfer(
-    int prevArrivalTime,
-    int boardStopIndex,
-    int boardTime,
-    int transitReluctanceIndex,
-    boolean firstBoarding,
-    RaptorTransferConstraint txConstraints
-  ) {
-    return boardingCostRegularTransfer(firstBoarding, prevArrivalTime, boardStopIndex, boardTime);
-  }
 }

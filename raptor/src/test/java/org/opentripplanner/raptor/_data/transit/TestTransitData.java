@@ -136,7 +136,7 @@ public class TestTransitData
   public RaptorCostCalculator<TestTripSchedule> multiCriteriaCostCalculator() {
     if (costCalculator == null) {
       if (requestBuilder().profile() == RaptorProfile.MULTI_CRITERIA_AP) {
-        costCalculator = new AlternativePathsCostCalculator<>(this, routes);
+        costCalculator = new AlternativePathsCostCalculator<>(this);
       } else {
         costCalculator = new TestCostCalculator(
           boardCostSec,
