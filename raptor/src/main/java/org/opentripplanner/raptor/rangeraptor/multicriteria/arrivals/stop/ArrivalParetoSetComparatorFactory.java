@@ -12,7 +12,7 @@ import org.opentripplanner.raptor.util.paretoset.ParetoComparator;
  * compiler can inline all lamdas for the best possible performance. Changes to this class
  * should be checked with the SpeedTest to avoid degration in performance.
  */
-public final class ArrivalParetoSetComparatorFactory<T extends McStopArrival<?>> {
+public class ArrivalParetoSetComparatorFactory<T extends McStopArrival<?>> {
 
   private final ParetoComparator<T> compareRegularStopArrivals;
   private final ParetoComparator<T> compareStopArrivalsIncludingOnBoardCriteria;

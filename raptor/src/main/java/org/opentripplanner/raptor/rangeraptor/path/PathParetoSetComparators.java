@@ -6,6 +6,7 @@ import static org.opentripplanner.raptor.api.path.RaptorPath.compareDepartureTim
 import static org.opentripplanner.raptor.api.path.RaptorPath.compareDurationInclusivePenalty;
 import static org.opentripplanner.raptor.api.path.RaptorPath.compareIterationDepartureTime;
 import static org.opentripplanner.raptor.api.path.RaptorPath.compareNumberOfTransfers;
+import static org.opentripplanner.raptor.path.LeximinPath.compareC1Path;
 
 import java.util.Objects;
 import org.opentripplanner.raptor.api.model.DominanceFunction;
@@ -67,10 +68,15 @@ public final class PathParetoSetComparators {
         case USE_ARRIVAL_TIME -> comparatorStandardArrivalTime();
         case USE_DEPARTURE_TIME -> comparatorStandardDepartureTime();
       };
-      case USE_C1 -> switch (timeConfig) {
+      case USE_C1-> switch (timeConfig) {
         case USE_TIMETABLE -> comparatorTimetableAndC1();
         case USE_ARRIVAL_TIME -> comparatorArrivalTimeAndC1();
         case USE_DEPARTURE_TIME -> comparatorDepartureTimeAndC1();
+      };
+      case USE_C1_LEXIMIN -> switch (timeConfig) {
+        case USE_TIMETABLE -> comparatorTimetableAndC1Leximin();
+        case USE_ARRIVAL_TIME -> comparatorArrivalTimeAndC1Leximin();
+        case USE_DEPARTURE_TIME -> comparatorDepartureTimeAndC1Leximin();
       };
       case USE_C1_RELAXED_IF_C2_IS_OPTIMAL -> switch (timeConfig) {
         case USE_TIMETABLE -> comparatorTimetableAndRelaxedC1IfC2IsOptimal(relaxC1, c2Comp);
@@ -133,6 +139,37 @@ public final class PathParetoSetComparators {
       compareNumberOfTransfers(l, r) ||
       compareDurationInclusivePenalty(l, r) ||
       compareC1(l, r);
+  }
+
+  private static <T extends RaptorTripSchedule> ParetoComparator<
+    RaptorPath<T>
+    > comparatorTimetableAndC1Leximin() {
+    return (l, r) ->
+      compareIterationDepartureTime(l, r) ||
+        compareArrivalTime(l, r) ||
+        compareNumberOfTransfers(l, r) ||
+        compareDurationInclusivePenalty(l, r) ||
+        compareC1Path(l, r);
+  }
+
+  private static <T extends RaptorTripSchedule> ParetoComparator<
+    RaptorPath<T>
+    > comparatorArrivalTimeAndC1Leximin() {
+    return (l, r) ->
+      compareArrivalTime(l, r) ||
+        compareNumberOfTransfers(l, r) ||
+        compareDurationInclusivePenalty(l, r) ||
+        compareC1Path(l, r);
+  }
+
+  private static <T extends RaptorTripSchedule> ParetoComparator<
+    RaptorPath<T>
+    > comparatorDepartureTimeAndC1Leximin() {
+    return (l, r) ->
+      compareDepartureTime(l, r) ||
+        compareNumberOfTransfers(l, r) ||
+        compareDurationInclusivePenalty(l, r) ||
+        compareC1Path(l, r);
   }
 
   private static <T extends RaptorTripSchedule> ParetoComparator<

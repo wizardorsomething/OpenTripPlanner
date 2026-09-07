@@ -36,7 +36,7 @@ import org.opentripplanner.raptor.util.paretoset.ParetoSetEventListener;
  *
  * @param <T> The TripSchedule type defined by the user of the raptor API.
  */
-public final class McStopArrivals<T extends RaptorTripSchedule> {
+public class McStopArrivals<T extends RaptorTripSchedule> {
 
   private final ParetoSet<McStopArrival<T>>[] arrivals;
   private final TIntObjectMap<OnTripAccessArrivals<T>> onBoardTripArrivalsByRouteQueue;

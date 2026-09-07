@@ -21,7 +21,8 @@ public enum ParetoSetCost {
    * the normal c1 comparison is used, and when comparing paths from different groups the relaxed
    * c1 comparison is used.
    */
-  USE_C1_RELAXED_IF_C2_IS_OPTIMAL;
+  USE_C1_RELAXED_IF_C2_IS_OPTIMAL,
+  USE_C1_LEXIMIN;
 
   /// Return `true` if the c1 criteria is included in the pareto comparison.
   public boolean useC1() {
