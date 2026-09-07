@@ -45,7 +45,7 @@ public class Path<T extends RaptorTripSchedule> implements RaptorPath<T> {
   private final EgressPathLeg<T> egressLeg;
 
   /** @see #dummyPath(int, int, int, int, int, int) */
-  private Path(
+  Path(
     int iterationDepartureTime,
     int startTime,
     int endTime,

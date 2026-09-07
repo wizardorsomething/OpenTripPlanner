@@ -7,6 +7,8 @@ import javax.annotation.Nullable;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
 import org.opentripplanner.raptor.api.path.RaptorPath;
 import org.opentripplanner.raptor.api.view.ArrivalView;
+import org.opentripplanner.raptor.path.LeximinMarker;
+import org.opentripplanner.raptor.path.LeximinPath;
 import org.opentripplanner.raptor.path.Path;
 import org.opentripplanner.raptor.rangeraptor.debug.DebugHandlerFactory;
 import org.opentripplanner.raptor.rangeraptor.internalapi.DebugHandler;
@@ -128,16 +130,29 @@ public class DestinationArrivalPaths<T extends RaptorTripSchedule> {
     int cost,
     int c2
   ) {
-    return paths.qualify(
-      Path.dummyPath(
-        iterationDepartureTime,
-        departureTime,
-        arrivalTime,
-        numberOfTransfers,
-        cost,
-        c2
-      )
-    );
+    if (costCalculator instanceof LeximinMarker) {
+      return paths.qualify(
+        LeximinPath.dummyPath(
+          iterationDepartureTime,
+          departureTime,
+          arrivalTime,
+          numberOfTransfers,
+          cost,
+          c2
+        )
+      );
+    } else {
+      return paths.qualify(
+        Path.dummyPath(
+          iterationDepartureTime,
+          departureTime,
+          arrivalTime,
+          numberOfTransfers,
+          cost,
+          c2
+        )
+      );
+    }
   }
 
   public Collection<RaptorPath<T>> listPaths() {

@@ -6,6 +6,7 @@ import javax.annotation.Nullable;
 import org.opentripplanner.raptor.api.model.DominanceFunction;
 import org.opentripplanner.raptor.api.path.RaptorPath;
 import org.opentripplanner.raptor.api.request.MultiCriteriaRequest;
+import org.opentripplanner.raptor.api.request.RaptorProfile;
 import org.opentripplanner.raptor.api.request.RaptorTransitGroupPriorityCalculator;
 import org.opentripplanner.raptor.api.view.ArrivalView;
 import org.opentripplanner.raptor.rangeraptor.context.SearchContext;
@@ -20,10 +21,12 @@ import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.McArrivalsE
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.McStopArrivals;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.StopsWithArriveByTransitCriteriaResolver;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.ArrivalParetoSetComparatorFactory;
+import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.LeximinComparators;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.McStopArrival;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.McStopArrivalFactory;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.StopArrivalFactoryC1;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.StopArrivalFactoryC2;
+import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.StopArrivalFactoryLeximin;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.heuristic.HeuristicsProvider;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.ride.AbstractPatternRide;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.ride.PatternRideC1;
@@ -132,7 +135,7 @@ public class McRangeRaptorConfig<T extends RaptorTripSchedule> {
 
   private RoutingStrategy<T> createTransitWorkerStrategy(McRangeRaptorWorkerState<T> state) {
     return switch (resolveCostConfig()) {
-      case USE_C1 -> createTransitWorkerStrategy(
+      case USE_C1, USE_C1_LEXIMIN -> createTransitWorkerStrategy(
         state,
         PatternRideC1.factory(),
         PatternRideC1.paretoComparatorRelativeCost()
@@ -178,9 +181,13 @@ public class McRangeRaptorConfig<T extends RaptorTripSchedule> {
 
   private McStopArrivalFactory<T> createStopArrivalFactory() {
     if (stopArrivalFactory == null) {
-      this.stopArrivalFactory = isTransitPriority()
-        ? new StopArrivalFactoryC2<>()
-        : new StopArrivalFactoryC1<>();
+      if (context().profile() == RaptorProfile.MULTI_CRITERIA_AP) {
+        this.stopArrivalFactory = new StopArrivalFactoryLeximin<>();
+      } else {
+        this.stopArrivalFactory = isTransitPriority()
+          ? new StopArrivalFactoryC2<>()
+          : new StopArrivalFactoryC1<>();
+      }
     }
     return stopArrivalFactory;
   }
@@ -219,6 +226,7 @@ public class McRangeRaptorConfig<T extends RaptorTripSchedule> {
   private ArrivalParetoSetComparatorFactory<McStopArrival<T>> createFactoryParetoComparator() {
     return switch (resolveCostConfig()) {
       case USE_C1 -> ArrivalParetoSetComparatorFactory.ofCompareC1();
+      case USE_C1_LEXIMIN -> LeximinComparators.ofCompareC1();
       case USE_C1_RELAXED_IF_C2_IS_OPTIMAL -> ArrivalParetoSetComparatorFactory.ofCompareC1RelaxedOnC2Dominance(
         mcRequest().relaxC1(),
         dominanceFunctionC2()
@@ -265,6 +273,9 @@ public class McRangeRaptorConfig<T extends RaptorTripSchedule> {
   }
 
   private ParetoSetCost resolveCostConfig() {
+    if (context().profile().is(RaptorProfile.MULTI_CRITERIA_AP)) {
+      return ParetoSetCost.USE_C1_LEXIMIN;
+    }
     if (isTransitPriority()) {
       return ParetoSetCost.USE_C1_RELAXED_IF_C2_IS_OPTIMAL;
     }
