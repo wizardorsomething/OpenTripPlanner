@@ -2,8 +2,8 @@ package org.opentripplanner.raptor.extensions.alternativepaths.counting;
 
 import static java.util.Objects.requireNonNull;
 
-import java.util.HashSet;
 import org.opentripplanner.raptor.api.debug.RaptorTimers;
+import org.opentripplanner.raptor.extensions.PreprocessingOutput;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RaptorRouter;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RaptorRouterResult;
 import org.opentripplanner.raptor.rangeraptor.lifecycle.LifeCycleEventPublisher;
@@ -12,7 +12,6 @@ import org.opentripplanner.raptor.rangeraptor.transit.RaptorTransitCalculator;
 import org.opentripplanner.raptor.rangeraptor.transit.RoundTracker;
 import org.opentripplanner.raptor.spi.IntIterator;
 import org.opentripplanner.raptor.spi.RaptorConstants;
-import org.opentripplanner.raptor.spi.RaptorRoute;
 import org.opentripplanner.raptor.spi.RaptorTransitDataProvider;
 import org.opentripplanner.raptor.spi.RaptorTripSchedule;
 
@@ -92,7 +91,7 @@ public final class PreprocessingRangeRaptor<T extends RaptorTripSchedule> implem
     this.timeoutHook = requireNonNull(timeoutHook);
   }
 
-  public HashSet<RaptorRoute<T>> touchedRoutes() {
+  public PreprocessingOutput<T> touchedRoutes() {
     return worker.getTouchedRoutes();
   }
 
@@ -134,7 +133,6 @@ public final class PreprocessingRangeRaptor<T extends RaptorTripSchedule> implem
     worker.applyAccessStartOnBoard();
 
     while (hasMoreRounds()) {
-      System.out.println("Round " + round());
       lifeCycle.prepareForNextRound(roundTracker.nextRound());
 
       // NB since we have transfer limiting not bothering to cut off search when there are no

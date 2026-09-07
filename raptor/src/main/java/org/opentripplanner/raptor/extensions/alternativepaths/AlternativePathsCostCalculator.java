@@ -5,15 +5,31 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+import org.opentripplanner.raptor.extensions.PreprocessingOutput;
+import org.opentripplanner.raptor.path.LeximinMarker;
 import org.opentripplanner.raptor.spi.RaptorCostCalculator;
 import org.opentripplanner.raptor.spi.RaptorRoute;
 import org.opentripplanner.raptor.spi.RaptorTransferConstraint;
 import org.opentripplanner.raptor.spi.RaptorTransitDataProvider;
+import org.opentripplanner.raptor.spi.RaptorTripPattern;
 import org.opentripplanner.raptor.spi.RaptorTripSchedule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-record StopTimeEntry<T extends RaptorTripSchedule>(T trip, int arrivalTime, int departureTime) {}
+record StopTimeEntry<T extends RaptorTripSchedule>(T trip, int arrivalTime, int departureTime) {
+
+  public String toFormattedString() {
+    return "%s (%s)".formatted(trip.pattern().debugInfo(), formatSecondsAsTime(arrivalTime));
+  }
+
+  private static String formatSecondsAsTime(int secondsSinceMidnight) {
+    return "%02d:%02d".formatted(
+      secondsSinceMidnight / 3600,
+      (secondsSinceMidnight % 3600) / 60
+    );
+  }
+}
 
 /**
  * The responsibility for the cost calculator is to calculate the default multi-criteria cost.
@@ -21,7 +37,7 @@ record StopTimeEntry<T extends RaptorTripSchedule>(T trip, int arrivalTime, int 
  * This class is immutable and thread safe.
  */
 public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
-  implements RaptorCostCalculator<T> {
+  implements RaptorCostCalculator<T>, LeximinMarker {
 
   private static final Logger LOG = LoggerFactory.getLogger(AlternativePathsCostCalculator.class);
 
@@ -29,6 +45,7 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
   private final Map<Integer, List<StopTimeEntry<T>>> tripsByStop;
   private final Map<String, List<StopTimeEntry<T>>> tripsByHub;
   private final Map<Integer, String> tripToHub;
+  private HashSet<Integer> egresses;
   private int minAlternatives;
   private int maxAlternatives;
   private final int scalingFactor = 100;
@@ -44,25 +61,29 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
     tripToHub = new HashMap<>();
   }
 
-  public void applyRoutes(HashSet<RaptorRoute<T>> routes, int earliest, int latest) {
+  public void applyRoutes(PreprocessingOutput<T> stopsAndRoutes, int earliest, int latest) {
+    var routes = stopsAndRoutes.routes();
+    var stops = stopsAndRoutes.stops();
+    egresses = stopsAndRoutes.egresses();
+    // System.out.println(routes.toString());
+    // System.out.println(stops.toString());
     for (RaptorRoute<T> route : routes) {
       var timetable = route.timetable();
       var pattern = route.pattern();
       int nStops = pattern.numberOfStopsInPattern();
       int nTrips = timetable.numberOfTripSchedules();
-      // LOG.info("Route: {}", route.pattern().debugInfo());
-      // LOG.info("nStops: {}", nStops);
-      // LOG.info("nTrips: {}", nTrips);
       var stopNameResolver = transitData.stopNameResolver();
       for (int j = 0; j < nStops; j++) {
         int stopIndex = pattern.stopIndex(j);
-        String hub = stopNameResolver.apply(stopIndex).replaceFirst("\\s?\\(\\d+\\)$", "");
-        tripToHub.putIfAbsent(stopIndex, hub);
-        for (int k = 0; k < nTrips; k++) {
-          T trip = timetable.getTripSchedule(k);
-          if (trip.arrival(j) >= earliest && trip.departure(j) <= latest) {
-            tripsByStop.computeIfAbsent(stopIndex, _ -> new ArrayList<>()).add(new StopTimeEntry<>(trip, trip.arrival(j), trip.departure(j)));
-            tripsByHub.computeIfAbsent(hub, _ -> new ArrayList<>()).add(new StopTimeEntry<>(trip, trip.arrival(j), trip.departure(j)));
+        if (stops.contains(stopIndex)) {
+          String hub = stopNameResolver.apply(stopIndex).replaceFirst("\\s?\\(\\d+\\)$", "");
+          tripToHub.putIfAbsent(stopIndex, hub);
+          for (int k = 0; k < nTrips; k++) {
+            T trip = timetable.getTripSchedule(k);
+            if (trip.arrival(j) >= earliest && trip.departure(j) <= latest) {
+              tripsByStop.computeIfAbsent(stopIndex, _ -> new ArrayList<>()).add(new StopTimeEntry<>(trip, trip.arrival(j), trip.departure(j)));
+              tripsByHub.computeIfAbsent(hub, _ -> new ArrayList<>()).add(new StopTimeEntry<>(trip, trip.arrival(j), trip.departure(j)));
+            }
           }
         }
       }
@@ -70,11 +91,9 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
     LOG.info("Number of routes: {}", routes.size());
     LOG.info("Number of stops: {}", tripsByStop.size());
     LOG.info("Number of hubs: {}", tripsByHub.size() );
+
     minAlternatives = Integer.MAX_VALUE;
     maxAlternatives = 0;
-    for (String hub : tripsByHub.keySet()) {
-      LOG.debug("{}: {} alternatives", hub, tripsByHub.get(hub).size());
-    }
     for (List<StopTimeEntry<T>> trips : tripsByHub.values()) {
       int s = trips.size();
       if (s < minAlternatives) {
@@ -86,8 +105,18 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
     }
     LOG.info("Min alternatives: {}", minAlternatives);
     LOG.info("Max alternatives: {}", maxAlternatives);
-    // System.out.println("Min alternatives: " + minAlternatives);
-    // System.out.println("Max alternatives: " + maxAlternatives);
+    System.out.println("Min alternatives: " + minAlternatives);
+    System.out.println("Max alternatives: " + maxAlternatives);
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("Routes:");
+      for (var route: routes.stream().map(RaptorRoute::pattern).map(RaptorTripPattern::debugInfo).sorted().toList()) {
+        LOG.debug(route);
+      }
+      LOG.debug("Hubs:");
+      for (String hub : tripsByHub.keySet().stream().sorted().toList()) {
+        LOG.debug("{}: {} alternatives: {}", hub, tripsByHub.get(hub).size(), tripsByHub.get(hub).stream().map(StopTimeEntry::toFormattedString).collect(Collectors.joining(", ")));
+      }
+    }
   }
 
   @Override
@@ -115,6 +144,9 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
     T trip,
     int toStopIndex
   ) {
+    if (egresses.contains(toStopIndex)) {
+      return 0;
+    }
     var pattern = trip.pattern();
     int stopIdInPattern = -1;
     for (int position = 0; position < pattern.numberOfStopsInPattern(); position++) {
@@ -122,34 +154,30 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
         stopIdInPattern = position;
       }
     }
-    return stopCost(toStopIndex, trip.arrival(stopIdInPattern), trip);
+    return stopArrivalCost(toStopIndex, trip.arrival(stopIdInPattern));
   }
 
-  public int stopCost(
+  public int stopArrivalCost(
     int stopIndex,
-    int arrivalTime,
-    T trip
+    int arrivalTime
   ) {
-
     int count = 0;
     if (tripsByStop.containsKey(stopIndex)) {
       for (StopTimeEntry<T> alternative : tripsByHub.get(tripToHub.get(stopIndex))) {
-        if (alternative.trip() != trip && alternative.departureTime() > arrivalTime) {
+        if (alternative.departureTime() > arrivalTime) {
           count += 1;
         }
       }
       if (count > maxAlternatives) {
+        System.out.println("Impossible alternative count: " + tripsByHub.get(tripToHub.get(stopIndex)));
         LOG.warn("Impossible alternative count: {}", tripsByHub.get(tripToHub.get(stopIndex)));
       }
+      // +1 to ensure we never return 0
+      return (maxAlternatives + 1 - count) * scalingFactor;
     } else {
       // System.out.println("Unknown stop in calculator: " + stopIndex);
-      return (maxAlternatives+1) * scalingFactor;
+      return (maxAlternatives*2) * scalingFactor;
     }
-    // System.out.println(transitData.stopNameResolver().apply(stopIndex) + ": " + count);
-    // LOG.info("{}: {}", transitData.stopNameResolver().apply(stopIndex), count);
-
-    // not +1 because trip itself is always excluded, so there is no risk of getting 0 cost
-    return (maxAlternatives - count) * scalingFactor;
   }
 
   @Override

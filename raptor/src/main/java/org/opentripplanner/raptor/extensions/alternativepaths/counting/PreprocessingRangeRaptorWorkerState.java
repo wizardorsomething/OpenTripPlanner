@@ -9,6 +9,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
 import org.opentripplanner.raptor.api.view.TransitArrival;
+import org.opentripplanner.raptor.extensions.PreprocessingOutputInt;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RaptorRouterResult;
 import org.opentripplanner.raptor.rangeraptor.standard.StdRaptorRouterResult;
 import org.opentripplanner.raptor.rangeraptor.standard.StdTransferEarlyPruning;
@@ -98,13 +99,21 @@ public final class PreprocessingRangeRaptorWorkerState<T extends RaptorTripSched
     this.egressStops = egressStops;
   }
 
-  public HashSet<Integer> relevantRoutes() {
+  public PreprocessingOutputInt relevantRoutes() {
     HashSet<Integer> stops = new HashSet<>();
     Deque<Integer> stack = new ArrayDeque<>();
+    HashSet<Integer> egresses = new HashSet<>();
 
-    for (int egress : egressStops) {
-      if (stops.add(egress)) {
-        stack.push(egress);
+    // System.out.println("stopsReachingStop: "+ stopsReachingStop);
+    // System.out.println("routesByStop: " + routesByStop);
+
+    for (var path : stopArrivalsState.extractPaths()) {
+      var access = path.accessLeg().toStop();
+      System.out.println("Access: " + access);
+      var egress = path.egressLeg().fromStop();
+      egresses.add(egress);
+      if (stops.add(access)) {
+        stack.push(access);
       }
     }
 
@@ -119,6 +128,7 @@ public final class PreprocessingRangeRaptorWorkerState<T extends RaptorTripSched
       }
     }
 
+    System.out.println("Stops: " + stops);
     HashSet<Integer> routes = new HashSet<>();
     for (int stop : stops) {
       if (routesByStop.containsKey(stop)) {
@@ -127,7 +137,7 @@ public final class PreprocessingRangeRaptorWorkerState<T extends RaptorTripSched
         // System.out.println("Unknown stop: " + stop);
       }
     }
-    return routes;
+    return new PreprocessingOutputInt(stops, routes, egresses);
   }
 
   @Override
@@ -220,9 +230,11 @@ public final class PreprocessingRangeRaptorWorkerState<T extends RaptorTripSched
       return;
     }
 
-    int fromStop = trip.pattern().stopIndex(boardStopPosition);
-    stopsReachingStop.computeIfAbsent(stop, _ -> new HashSet<>()).add(fromStop);
-    routesByStop.computeIfAbsent(stop, _ -> new HashSet<>()).add(trip.pattern().patternIndex());
+    if (withinSlack(stop, arrivalTime)) {
+      int fromStop = trip.pattern().stopIndex(boardStopPosition);
+      stopsReachingStop.computeIfAbsent(stop, _ -> new HashSet<>()).add(fromStop);
+      routesByStop.computeIfAbsent(stop, _ -> new HashSet<>()).add(trip.pattern().patternIndex());
+    }
 
     if (newBestTransitArrivalTime(stop, arrivalTime)) {
       // transitTimes upper bounds bestTimes
@@ -263,7 +275,9 @@ public final class PreprocessingRangeRaptorWorkerState<T extends RaptorTripSched
     }
 
     final int toStop = transfer.stop();
-    stopsReachingStop.computeIfAbsent(toStop, _ -> new HashSet<>()).add(fromStop);
+    if (withinSlack(toStop, arrivalTime)) {
+      stopsReachingStop.computeIfAbsent(toStop, _ -> new HashSet<>()).add(fromStop);
+    }
 
     if (newOverallBestTime(toStop, arrivalTime)) {
       stopArrivalsState.setNewBestTransferTime(fromStop, arrivalTime, transfer);
@@ -283,6 +297,10 @@ public final class PreprocessingRangeRaptorWorkerState<T extends RaptorTripSched
   }
 
   /* private methods */
+  private boolean withinSlack(int stop, int alightTime) {
+    var optimal = bestTimes.time(stop);
+    return alightTime <= 2 * optimal;
+  }
 
   private boolean newOverallBestTime(int stop, int alightTime) {
     boolean updated = bestTimes.updateNewBestTime(stop, alightTime);
