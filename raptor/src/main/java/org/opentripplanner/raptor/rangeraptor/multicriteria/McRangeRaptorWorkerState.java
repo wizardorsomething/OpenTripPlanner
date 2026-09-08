@@ -11,6 +11,7 @@ import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
 import org.opentripplanner.raptor.api.model.RaptorStartOnBoardAccess;
 import org.opentripplanner.raptor.api.model.RaptorTripScheduleStopPosition;
 import org.opentripplanner.raptor.api.view.ArrivalView;
+import org.opentripplanner.raptor.path.LeximinMarker;
 import org.opentripplanner.raptor.rangeraptor.internalapi.OnTripAccessArrivals;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RaptorRouterResult;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RaptorWorkerState;
@@ -18,6 +19,7 @@ import org.opentripplanner.raptor.rangeraptor.internalapi.WorkerLifeCycle;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.McStopArrivals;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.McStopArrival;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.McStopArrivalFactory;
+import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.StopArrivalFactoryLeximin;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.heuristic.HeuristicsProvider;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.ride.AbstractPatternRide;
 import org.opentripplanner.raptor.rangeraptor.path.DestinationArrivalPaths;
@@ -127,6 +129,11 @@ public final class McRangeRaptorWorkerState<T extends RaptorTripSchedule>
   }
 
   public void addAccessToStop(RaptorAccessEgress accessPath, int departureTime) {
+    if (calculatorGeneralizedCost instanceof LeximinMarker) {
+      var cost = ((LeximinMarker) calculatorGeneralizedCost).stopArrivalCost(accessPath.stop(), departureTime+accessPath.durationInSeconds());
+      addStopArrival(((StopArrivalFactoryLeximin<T>) stopArrivalFactory).createAccessStopArrival(departureTime, accessPath, cost));
+    }
+
     addStopArrival(stopArrivalFactory.createAccessStopArrival(departureTime, accessPath));
   }
 

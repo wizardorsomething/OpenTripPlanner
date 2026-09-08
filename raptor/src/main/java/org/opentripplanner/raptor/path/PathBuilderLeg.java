@@ -348,6 +348,10 @@ public class PathBuilderLeg<T extends RaptorTripSchedule> {
   ) {
     PathLeg<T> nextLeg = next.createPathLeg(costCalculator, slackProvider);
     var accessPath = asAccessLeg().streetPath;
+    if (costCalculator instanceof LeximinMarker) {
+      int cost = ((LeximinMarker) costCalculator).stopArrivalCost(accessPath.stop(), accessPath.earliestDepartureTime(0)+accessPath.durationInSeconds());
+      return new AccessPathLeg<>(accessPath, fromTime, toTime, cost, nextLeg);
+    }
     int cost = cost(costCalculator, accessPath);
     return new AccessPathLeg<>(accessPath, fromTime, toTime, cost, nextLeg);
   }
