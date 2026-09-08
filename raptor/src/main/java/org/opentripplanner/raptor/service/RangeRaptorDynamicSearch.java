@@ -1,8 +1,8 @@
 package org.opentripplanner.raptor.service;
 
-import static org.opentripplanner.raptor.api.request.RaptorProfile.MIN_TRAVEL_DURATION;
 import static org.opentripplanner.raptor.api.request.RaptorProfile.MULTI_CRITERIA;
 import static org.opentripplanner.raptor.api.request.RaptorProfile.MULTI_CRITERIA_AP;
+import static org.opentripplanner.raptor.api.request.RaptorProfile.STANDARD;
 import static org.opentripplanner.raptor.service.HeuristicToRunResolver.resolveHeuristicToRunBasedOnOptimizationsAndSearchParameters;
 import static org.opentripplanner.raptor.spi.SearchDirection.FORWARD;
 import static org.opentripplanner.raptor.spi.SearchDirection.REVERSE;
@@ -90,9 +90,10 @@ public class RangeRaptorDynamicSearch<T extends RaptorTripSchedule> {
           .mutate()
           // Disable any optimization that is not valid for a heuristic search
           .clearOptimizations()
-          .profile(MIN_TRAVEL_DURATION)
+          .profile(STANDARD)
           .searchDirection(REVERSE);
         // only consider routes in paths that take at least twice as long as fastest
+        // @TODO removing this breaks everything for some reason
         builder.searchParams()
           .latestArrivalTime(timeWindowEnd);
         builder.searchParams().searchOneIterationOnly();
