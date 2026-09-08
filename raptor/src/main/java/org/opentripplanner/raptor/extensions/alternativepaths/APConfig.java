@@ -55,9 +55,6 @@ public class APConfig<T extends RaptorTripSchedule> {
   private ArrivedAtDestinationCheck arrivedAtDestinationCheck;
   private BestNumberOfTransfers bestNumberOfTransfers;
 
-  // walking limit in minutes
-  private final int walkingLimit = 20;
-
   public APConfig(SearchContext<T> context) {
     this.ctx = context;
     this.pathConfig = new PathConfig<>(context);
@@ -95,8 +92,8 @@ public class APConfig<T extends RaptorTripSchedule> {
 
   public PreprocessingRangeRaptorWorkerState<T> resolveState() {
     if (state == null) {
-      var stops = egressPaths().listAll().stream().filter(path -> path.durationInSeconds() < 60 * walkingLimit).map(RaptorAccessEgress::stop).distinct().toList();
-      System.out.println("Number of egress stops: " + stops.size());
+      var stops = egressPaths().listAll().stream().map(RaptorAccessEgress::stop).distinct().toList();
+      //var stops = egressPaths().listAll().stream().filter(path -> path.durationInSeconds() < 60 * walkingLimit).map(RaptorAccessEgress::stop).distinct().toList();
       this.state = oneOf(
         new PreprocessingRangeRaptorWorkerState<>(
           ctx.calculator(),
