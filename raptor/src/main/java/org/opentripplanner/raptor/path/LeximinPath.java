@@ -69,12 +69,12 @@ public class LeximinPath<T extends RaptorTripSchedule> extends Path<T> {
 
   @Override
   public String toString() {
-    return super.toString() + " - " + c1PathToString();
+    return super.toString().replaceAll("(C₁).*", "$1") + c1PathToString() + "]";
   }
 
   @Override
   public String toString(RaptorStopNameResolver stopNameTranslator) {
-    return super.toString(stopNameTranslator) + " - " + c1PathToString();
+    return super.toString(stopNameTranslator).replaceAll("(C₁).*", "$1") + c1PathToString() + "]";
   }
 
   private String c1PathToString() {
