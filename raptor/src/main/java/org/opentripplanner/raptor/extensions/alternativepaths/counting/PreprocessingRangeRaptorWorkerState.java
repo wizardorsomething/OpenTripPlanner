@@ -76,6 +76,7 @@ public final class PreprocessingRangeRaptorWorkerState<T extends RaptorTripSched
   private final HashMap<Integer, HashSet<Integer>> routesByStop;
   private final HashMap<Integer, HashSet<Integer>> stopsReachingStop;
   private final HashMap<Integer, HashSet<StopTransfer>> stopsReachingStopWalking;
+  private final List<Integer> accessStops;
   private final List<Integer> egressStops;
   /**
    * create a BestTimes Range Raptor State for the given context.
@@ -86,6 +87,7 @@ public final class PreprocessingRangeRaptorWorkerState<T extends RaptorTripSched
     StopArrivalsState<T> stopArrivalsState,
     BestNumberOfTransfers bestNumberOfTransfers,
     ArrivedAtDestinationCheck arrivedAtDestinationCheck,
+    List<Integer> accessStops,
     List<Integer> egressStops,
     @Nullable StdTransferEarlyPruning<T> earlyPruning
   ) {
@@ -99,24 +101,21 @@ public final class PreprocessingRangeRaptorWorkerState<T extends RaptorTripSched
     this.routesByStop = new HashMap<>();
     this.stopsReachingStop = new HashMap<>();
     this.stopsReachingStopWalking = new HashMap<>();
+    this.accessStops = accessStops;
     this.egressStops = egressStops;
   }
 
   public PreprocessingOutput<Integer> routingInfo() {
     HashSet<Integer> stops = new HashSet<>();
     Deque<Integer> stack = new ArrayDeque<>();
-    HashSet<Integer> egresses = new HashSet<>();
 
     System.out.println("stopsReachingStop: "+ stopsReachingStop);
     System.out.println("routesByStop: " + routesByStop);
+    System.out.println("accessStops: " + accessStops);
 
-    for (var path : stopArrivalsState.extractPaths()) {
-      var access = path.accessLeg().toStop();
-      System.out.println("Access: " + access);
-      var egress = path.egressLeg().fromStop();
-      egresses.add(egress);
-      if (stops.add(access)) {
-        stack.push(access);
+    for (int stop : accessStops) {
+      if (stops.add(stop)) {
+        stack.push(stop);
       }
     }
 
@@ -139,7 +138,7 @@ public final class PreprocessingRangeRaptorWorkerState<T extends RaptorTripSched
       }
     }
     System.out.println("routesByStopFiltered: " + filteredRoutes);
-    return new PreprocessingOutput<>(filteredRoutes, stopsReachingStopWalking, egresses);
+    return new PreprocessingOutput<>(filteredRoutes, stopsReachingStopWalking, new HashSet<>(egressStops));
   }
 
   @Override

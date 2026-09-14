@@ -32,6 +32,7 @@ import org.opentripplanner.raptor.rangeraptor.standard.stoparrivals.StdStopArriv
 import org.opentripplanner.raptor.rangeraptor.standard.stoparrivals.StdStopArrivalsState;
 import org.opentripplanner.raptor.rangeraptor.standard.stoparrivals.path.EgressArrivalToPathAdapter;
 import org.opentripplanner.raptor.rangeraptor.standard.stoparrivals.view.StopsCursor;
+import org.opentripplanner.raptor.rangeraptor.transit.AccessPaths;
 import org.opentripplanner.raptor.rangeraptor.transit.EgressPaths;
 import org.opentripplanner.raptor.spi.RaptorTripSchedule;
 
@@ -92,7 +93,10 @@ public class APConfig<T extends RaptorTripSchedule> {
 
   public PreprocessingRangeRaptorWorkerState<T> resolveState() {
     if (state == null) {
-      var stops = egressPaths().listAll().stream().map(RaptorAccessEgress::stop).distinct().toList();
+      var accessStops = accessPaths().arrivedOnStreetByNumOfRides(0).stream().map(RaptorAccessEgress::stop).distinct().toList();
+      System.out.println("accessPaths: " + accessPaths().arrivedOnStreetByNumOfRides(0));
+      var egressStops = egressPaths().listAll().stream().map(RaptorAccessEgress::stop).distinct().toList();
+      System.out.println("egressPaths: " + egressPaths().listAll());
       //var stops = egressPaths().listAll().stream().filter(path -> path.durationInSeconds() < 60 * walkingLimit).map(RaptorAccessEgress::stop).distinct().toList();
       this.state = oneOf(
         new PreprocessingRangeRaptorWorkerState<>(
@@ -101,7 +105,8 @@ public class APConfig<T extends RaptorTripSchedule> {
           createStopArrivals(),
           resolveBestNumberOfTransfers(),
           resolveArrivedAtDestinationCheck(),
-          stops,
+          egressStops,
+          accessStops,
           createEarlyPruning()
         ),
         StdWorkerState.class
@@ -260,6 +265,13 @@ public class APConfig<T extends RaptorTripSchedule> {
     return Objects.requireNonNull(
       ctx.segments().getLast().egressPaths(),
       "Last leg must have non-null egressPaths"
+    );
+  }
+
+  private AccessPaths accessPaths() {
+    return Objects.requireNonNull(
+      ctx.segments().getFirst().accessPaths(),
+      "First leg must have non-null accessPaths"
     );
   }
 
