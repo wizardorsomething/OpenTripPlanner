@@ -1,8 +1,6 @@
 package org.opentripplanner.raptor.extensions.alternativepaths.counting;
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
 import org.opentripplanner.raptor.api.debug.RaptorTimers;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
 import org.opentripplanner.raptor.extensions.alternativepaths.records.PreprocessingOutput;
