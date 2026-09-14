@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import org.opentripplanner.raptor.api.debug.RaptorTimers;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
-import org.opentripplanner.raptor.extensions.PreprocessingOutput;
+import org.opentripplanner.raptor.extensions.alternativepaths.records.PreprocessingOutput;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RangeRaptorWorker;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RaptorRouterResult;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RoutingStrategy;
@@ -117,14 +117,8 @@ public final class PreprocessingRangeRaptorWorker<T extends RaptorTripSchedule>
     this.routesByStop = new HashMap<>();
   }
 
-  public PreprocessingOutput<T> getTouchedRoutes() {
-    HashSet<RaptorRoute<T>> result = new HashSet<>();
-    var output = state.relevantRoutes();
-    for (int index : output.routes()) {
-      result.add(transitData.getRouteForIndex(index));
-    }
-
-    return new PreprocessingOutput<T>(output.stops(), result, output.egresses());
+  public PreprocessingOutput<RaptorRoute<T>> getRoutingInfo() {
+    return state.routingInfo().mapRoutes(transitData::getRouteForIndex);
   }
 
   /**

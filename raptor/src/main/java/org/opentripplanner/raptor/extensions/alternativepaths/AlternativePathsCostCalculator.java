@@ -6,7 +6,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import org.opentripplanner.raptor.extensions.PreprocessingOutput;
+import org.opentripplanner.raptor.extensions.alternativepaths.records.PreprocessingOutput;
+import org.opentripplanner.raptor.extensions.alternativepaths.records.StopTransfer;
 import org.opentripplanner.raptor.path.LeximinMarker;
 import org.opentripplanner.raptor.spi.RaptorCostCalculator;
 import org.opentripplanner.raptor.spi.RaptorRoute;
@@ -43,8 +44,7 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
 
   private final RaptorTransitDataProvider<T> transitData;
   private final Map<Integer, List<StopTimeEntry<T>>> tripsByStop;
-  private final Map<String, List<StopTimeEntry<T>>> tripsByHub;
-  private final Map<Integer, String> tripToHub;
+  private Map<Integer, HashSet<StopTransfer>> transfersFromStop;
   private HashSet<Integer> egresses;
   private int minAlternatives;
   private int maxAlternatives;
@@ -57,45 +57,35 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
   public AlternativePathsCostCalculator(RaptorTransitDataProvider<T> transitData) {
     this.transitData = transitData;
     tripsByStop = new HashMap<>();
-    tripsByHub = new HashMap<>();
-    tripToHub = new HashMap<>();
+    transfersFromStop = new HashMap<>();
   }
 
-  public void applyRoutes(PreprocessingOutput<T> stopsAndRoutes, int earliest, int latest) {
-    var routes = stopsAndRoutes.routes();
-    var stops = stopsAndRoutes.stops();
-    egresses = stopsAndRoutes.egresses();
-    // System.out.println(routes.toString());
-    // System.out.println(stops.toString());
-    for (RaptorRoute<T> route : routes) {
-      var timetable = route.timetable();
-      var pattern = route.pattern();
-      int nStops = pattern.numberOfStopsInPattern();
-      int nTrips = timetable.numberOfTripSchedules();
-      var stopNameResolver = transitData.stopNameResolver();
-      for (int j = 0; j < nStops; j++) {
-        int stopIndex = pattern.stopIndex(j);
-        if (stops.contains(stopIndex)) {
-          String hub = stopNameResolver.apply(stopIndex).replaceFirst("\\s?\\(\\d+\\)$", "");
-          tripToHub.putIfAbsent(stopIndex, hub);
-          for (int k = 0; k < nTrips; k++) {
-            T trip = timetable.getTripSchedule(k);
-            if (trip.arrival(j) >= earliest && trip.departure(j) <= latest) {
-              tripsByStop.computeIfAbsent(stopIndex, _ -> new ArrayList<>()).add(new StopTimeEntry<>(trip, trip.arrival(j), trip.departure(j)));
-              tripsByHub.computeIfAbsent(hub, _ -> new ArrayList<>()).add(new StopTimeEntry<>(trip, trip.arrival(j), trip.departure(j)));
-            }
+  public void applyRoutes(PreprocessingOutput<RaptorRoute<T>> routingInfo, int earliest, int latest) {
+    var routesByStop = routingInfo.routesByStop();
+    var resolver = transitData.stopNameResolver();
+    this.transfersFromStop = routingInfo.transferOptions();
+    egresses = routingInfo.egresses();
+    for (int stop : routesByStop.keySet()) {
+      tripsByStop.put(stop, new ArrayList<>());
+      for (RaptorRoute<T> route : routesByStop.get(stop)) {
+        var timetable = route.timetable();
+        var pattern = route.pattern();
+        int nTrips = timetable.numberOfTripSchedules();
+        int idInPattern = stopIndexToIdInPattern(stop, pattern);
+        for (int i = 0; i < nTrips; i++) {
+          T trip = timetable.getTripSchedule(i);
+          if (trip.arrival(idInPattern) > earliest && trip.departure(idInPattern) < latest) {
+            tripsByStop.get(stop).add(new StopTimeEntry<>(trip, trip.arrival(idInPattern), trip.departure(idInPattern)));
           }
         }
       }
     }
-    LOG.info("Number of routes: {}", routes.size());
     LOG.info("Number of stops: {}", tripsByStop.size());
-    LOG.info("Number of hubs: {}", tripsByHub.size() );
 
     minAlternatives = Integer.MAX_VALUE;
     maxAlternatives = 0;
-    for (List<StopTimeEntry<T>> trips : tripsByHub.values()) {
-      int s = trips.size();
+    for (int stop : tripsByStop.keySet()) {
+      int s = stopArrivalCount(stop, earliest).size();
       if (s < minAlternatives) {
         minAlternatives = s;
       }
@@ -108,14 +98,14 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
     System.out.println("Min alternatives: " + minAlternatives);
     System.out.println("Max alternatives: " + maxAlternatives);
     if (LOG.isDebugEnabled()) {
-      LOG.debug("Routes:");
-      for (var route: routes.stream().map(RaptorRoute::pattern).map(RaptorTripPattern::debugInfo).sorted().toList()) {
-        LOG.debug(route);
+      LOG.debug("Stops:");
+      for (int stop : tripsByStop.keySet().stream().sorted().toList()) {
+        LOG.debug("{}: {} alternatives: {}", resolver.apply(stop), tripsByStop.get(stop).size(), tripsByStop.get(stop).stream().map(StopTimeEntry::toFormattedString).collect(Collectors.joining(", ")));
+        if (transfersFromStop.containsKey(stop)) {
+          LOG.debug("{} transfers: {}", transfersFromStop.get(stop).size(), transfersFromStop.get(stop).stream().map(transfer -> transfer.toFormattedString(transitData.stopNameResolver())).collect(Collectors.joining(", ")));
+        }
       }
-      LOG.debug("Hubs:");
-      for (String hub : tripsByHub.keySet().stream().sorted().toList()) {
-        LOG.debug("{}: {} alternatives: {}", hub, tripsByHub.get(hub).size(), tripsByHub.get(hub).stream().map(StopTimeEntry::toFormattedString).collect(Collectors.joining(", ")));
-      }
+      LOG.debug("{} Egress stops: {}", egresses.stream().count(), egresses.stream().map(resolver::apply).toList());
     }
   }
 
@@ -136,6 +126,16 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
     return 0;
   }
 
+  private int stopIndexToIdInPattern(int stopIndex, RaptorTripPattern pattern) {
+    for (int position = 0; position < pattern.numberOfStopsInPattern(); position++) {
+      if (pattern.stopIndex(position) == stopIndex) {
+        return position;
+      }
+    }
+    LOG.warn("Unknown stop index, this shouldn't happen.");
+    return -1;
+  }
+
   @Override
   public int transitArrivalCost(
     int boardCost,
@@ -147,30 +147,43 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
     if (egresses.contains(toStopIndex)) {
       return 0;
     }
-    var pattern = trip.pattern();
-    int stopIdInPattern = -1;
-    for (int position = 0; position < pattern.numberOfStopsInPattern(); position++) {
-      if (pattern.stopIndex(position) == toStopIndex) {
-        stopIdInPattern = position;
+    return stopArrivalCost(toStopIndex, trip.arrival(stopIndexToIdInPattern(toStopIndex, trip.pattern())));
+  }
+
+  private List<StopTimeEntry<T>> stopArrivalCount(
+    int stopIndex,
+    int arrivalTime
+  ) {
+    int count = 0;
+    ArrayList<StopTimeEntry<T>> alternatives = new ArrayList<>();
+    for (StopTimeEntry<T> alternative : tripsByStop.get(stopIndex)) {
+      if (alternative.departureTime() > arrivalTime) {
+        count += 1;
+        alternatives.add(alternative);
       }
     }
-    return stopArrivalCost(toStopIndex, trip.arrival(stopIdInPattern));
+    for (var nearbyStop : transfersFromStop.getOrDefault(stopIndex, new HashSet<>())) {
+      int arrivalTimeWithWalk = arrivalTime + nearbyStop.walkDurationSeconds();
+      for (StopTimeEntry<T> alternative : tripsByStop.getOrDefault(nearbyStop.targetStop(), new ArrayList<>())) {
+        if (alternative.departureTime() > arrivalTimeWithWalk) {
+          count += 1;
+          alternatives.add(alternative);
+        }
+      }
+    }
+    return alternatives;
   }
 
   public int stopArrivalCost(
     int stopIndex,
     int arrivalTime
   ) {
-    int count = 0;
     if (tripsByStop.containsKey(stopIndex)) {
-      for (StopTimeEntry<T> alternative : tripsByHub.get(tripToHub.get(stopIndex))) {
-        if (alternative.departureTime() > arrivalTime) {
-          count += 1;
-        }
-      }
+      var alternatives = stopArrivalCount(stopIndex, arrivalTime);
+      int count = alternatives.size();
       if (count > maxAlternatives) {
-        System.out.println("Impossible alternative count: " + tripsByHub.get(tripToHub.get(stopIndex)));
-        LOG.warn("Impossible alternative count: {}", tripsByHub.get(tripToHub.get(stopIndex)));
+        // System.out.println("Impossible alternative count: " + count);
+        LOG.warn("Impossible alternative count at {}: {}, {}", transitData.stopNameResolver().apply(stopIndex), count, alternatives.stream().map(StopTimeEntry::toFormattedString).toList());
       }
       // +1 to ensure we never return 0
       return (maxAlternatives + 1 - count) * scalingFactor;

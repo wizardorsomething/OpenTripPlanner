@@ -3,7 +3,7 @@ package org.opentripplanner.raptor.extensions.alternativepaths.counting;
 import static java.util.Objects.requireNonNull;
 
 import org.opentripplanner.raptor.api.debug.RaptorTimers;
-import org.opentripplanner.raptor.extensions.PreprocessingOutput;
+import org.opentripplanner.raptor.extensions.alternativepaths.records.PreprocessingOutput;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RaptorRouter;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RaptorRouterResult;
 import org.opentripplanner.raptor.rangeraptor.lifecycle.LifeCycleEventPublisher;
@@ -12,6 +12,7 @@ import org.opentripplanner.raptor.rangeraptor.transit.RaptorTransitCalculator;
 import org.opentripplanner.raptor.rangeraptor.transit.RoundTracker;
 import org.opentripplanner.raptor.spi.IntIterator;
 import org.opentripplanner.raptor.spi.RaptorConstants;
+import org.opentripplanner.raptor.spi.RaptorRoute;
 import org.opentripplanner.raptor.spi.RaptorTransitDataProvider;
 import org.opentripplanner.raptor.spi.RaptorTripSchedule;
 
@@ -91,8 +92,8 @@ public final class PreprocessingRangeRaptor<T extends RaptorTripSchedule> implem
     this.timeoutHook = requireNonNull(timeoutHook);
   }
 
-  public PreprocessingOutput<T> touchedRoutes() {
-    return worker.getTouchedRoutes();
+  public PreprocessingOutput<RaptorRoute<T>> routingInfo() {
+    return worker.getRoutingInfo();
   }
 
   public RaptorRouterResult<T> route() {
