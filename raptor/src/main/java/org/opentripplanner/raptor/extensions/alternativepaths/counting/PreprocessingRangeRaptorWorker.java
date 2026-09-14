@@ -81,9 +81,7 @@ public final class PreprocessingRangeRaptorWorker<T extends RaptorTripSchedule>
 
   private int iterationDepartureTime;
 
-  private int round;
-
-  private final HashMap<Integer, HashSet<RaptorRoute<T>>> routesByStop;
+  private int round;;
 
   /**
    * @param accessPaths can be null in case the worker is chained - only the first worker has
@@ -111,8 +109,6 @@ public final class PreprocessingRangeRaptorWorker<T extends RaptorTripSchedule>
 
     lifeCycle.onSetupIteration(time -> this.iterationDepartureTime = time);
     lifeCycle.onPrepareForNextRound(round -> this.round = round);
-
-    this.routesByStop = new HashMap<>();
   }
 
   public PreprocessingOutput<RaptorRoute<T>> getRoutingInfo() {
@@ -242,7 +238,6 @@ public final class PreprocessingRangeRaptorWorker<T extends RaptorTripSchedule>
         } else {
           transitWorker.alightOnlyRegularTransferExist(stopIndex, stopPos, alightSlack);
         }
-        routesByStop.computeIfAbsent(stopIndex, id -> new HashSet<>()).add(route);
       }
 
       // attempt to board using on-board trip access/pass-though. This happens after
