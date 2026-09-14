@@ -5,7 +5,6 @@ import java.util.Map;
 import org.opentripplanner.apis.transmodel.model.TransportModeSlack;
 import org.opentripplanner.apis.transmodel.model.plan.RelaxCostType;
 import org.opentripplanner.apis.transmodel.support.DataFetcherDecorator;
-import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.raptor.api.request.RaptorProfile;
 import org.opentripplanner.routing.api.request.framework.CostLinearFunction;
 import org.opentripplanner.routing.api.request.preference.TransitPreferences;
@@ -37,9 +36,16 @@ public class TransitPreferencesMapper {
         TransportModeSlack.mapIntoDomain(builder, v)
       );
     });
+    callWith.argument("alternativePaths", (Boolean useAp) ->
+      transit.withRaptor(b -> b.withProfile(
+        useAp ? RaptorProfile.MULTI_CRITERIA_AP : RaptorProfile.MULTI_CRITERIA
+      ))
+    );
+    /**
     if (OTPFeature.AlternativePaths.isOn()) {
       transit.withRaptor(b -> b.withProfile(RaptorProfile.MULTI_CRITERIA_AP));
     }
+     **/
     callWith.argument("ignoreRealtimeUpdates", transit::withIgnoreRealtimeUpdates);
     callWith.argument("includePlannedCancellations", transit::withIncludePlannedCancellations);
     callWith.argument("includeRealtimeCancellations", transit::withIncludeRealtimeCancellations);

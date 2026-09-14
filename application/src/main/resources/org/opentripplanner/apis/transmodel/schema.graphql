@@ -871,6 +871,8 @@ type QueryType {
     alightSlackDefault: Int = 0,
     "List of alightSlack for a given set of modes. Defaults: []"
     alightSlackList: [TransportModeSlack],
+    "Whether the trip uses alternative paths-based routing."
+    alternativePaths: Boolean = false,
     "Whether the trip should depart at dateTime (false, the default), or arrive at dateTime. See `timetableView` for use-cases where this parameter is relevant."
     arriveBy: Boolean = false,
     "Parameters for indicating authorities, lines or quays not be used in the trip patterns"

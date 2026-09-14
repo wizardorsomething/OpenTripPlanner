@@ -16,6 +16,7 @@ import { useRef, useState } from 'react';
 import logo from '../../static/img/otp-logo.svg';
 import GraphiQLRouteButton from './GraphiQLRouteButton.tsx';
 import WheelchairAccessibleCheckBox from './WheelchairAccessibleCheckBox.tsx';
+import AlternativePathsCheckBox from './AlternativePathsCheckBox.tsx';
 import { SwapLocationsButton } from './SwapLocationsButton.tsx';
 
 type SearchBarProps = {
@@ -69,6 +70,11 @@ export function SearchBar({ onRoute, tripQueryVariables, setTripQueryVariables, 
         tripQueryVariables={tripQueryVariables}
         setTripQueryVariables={setTripQueryVariables}
       />
+      <AlternativePathsCheckBox
+        tripQueryVariables={tripQueryVariables}
+        setTripQueryVariables={setTripQueryVariables}
+      />
+
 
       <div className="search-bar-route-button-wrapper">
         <ButtonGroup>
