@@ -1,5 +1,6 @@
 package org.opentripplanner.raptor.path;
 
+import java.util.Arrays;
 import java.util.stream.IntStream;
 import org.opentripplanner.raptor.api.path.AccessPathLeg;
 import org.opentripplanner.raptor.api.path.PathLeg;
@@ -89,7 +90,11 @@ public class LeximinPath<T extends RaptorTripSchedule> extends Path<T> {
   }
 
   public static <T extends RaptorTripSchedule> boolean compareC1Path(RaptorPath<T> l, RaptorPath<T> r) {
-    return leximinComparison(((LeximinPath<T>) l).getC1Path(), ((LeximinPath<T>) r).getC1Path());
+    int[] sortedL = ((LeximinPath<T>) l).getC1Path().clone();
+    Arrays.sort(sortedL);
+    int[] sortedR = ((LeximinPath<T>) r).getC1Path().clone();
+    Arrays.sort(sortedR);
+    return leximinComparison(sortedL, sortedR);
   }
 
   private static boolean leximinComparison(int[] pathL, int[] pathR) {
