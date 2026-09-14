@@ -83,7 +83,6 @@ public final class PreprocessingRangeRaptorWorker<T extends RaptorTripSchedule>
 
   private int round;
 
-  private final HashSet<RaptorRoute<T>> touchedRoutes;
   private final HashMap<Integer, HashSet<RaptorRoute<T>>> routesByStop;
 
   /**
@@ -113,7 +112,6 @@ public final class PreprocessingRangeRaptorWorker<T extends RaptorTripSchedule>
     lifeCycle.onSetupIteration(time -> this.iterationDepartureTime = time);
     lifeCycle.onPrepareForNextRound(round -> this.round = round);
 
-    this.touchedRoutes = new HashSet<>();
     this.routesByStop = new HashMap<>();
   }
 
@@ -164,7 +162,6 @@ public final class PreprocessingRangeRaptorWorker<T extends RaptorTripSchedule>
       while (routeIndexIterator.hasNext()) {
         var routeIndex = routeIndexIterator.next();
         var route = transitData.getRouteForIndex(routeIndex);
-        touchedRoutes.add(route);
         var pattern = route.pattern();
         var stopPositions = calculator.patternStopIterator(pattern.numberOfStopsInPattern());
 
