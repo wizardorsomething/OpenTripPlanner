@@ -21,11 +21,11 @@ import org.opentripplanner.raptor.moduletests.support.RaptorModuleTestCase;
 /**
  * FEATURE UNDER TEST
  * <p>
- * With two overlapping paths
- * - RAPTOR should choose the first transfer location
- * - RAPTOR with criterion should choose the transfer location with additional onward alternatives (here second)
+ * With two alternatives departing and arriving at the same time, with one transfer each, but one having an alternative connection at the transfer
+ * - RAPTOR should choose either (random - in practice chooses always the second one)
+ * - RAPTOR with criterion should choose the one with additional alternative
  */
-public class G_TwoPathsOverlapping implements RaptorTestConstants {
+public class C_TwoPathsDifferentAlternatives2 implements RaptorTestConstants {
 
   private final TestTransitData data = new TestTransitData();
   private final RaptorRequestBuilder<TestTripSchedule> requestBuilder = data.requestBuilder();
@@ -55,14 +55,20 @@ public class G_TwoPathsOverlapping implements RaptorTestConstants {
       .withTimetables(
         """
         -- R1
-        A      B       C
-        00:01  00:05   00:10
+        A      B
+        00:01  00:06
         -- R2
-               B       C      D
-               00:06   00:11  00:20
+               B              D
+               00:07          00:17
         -- R3
-                       C      D
-                       00:20  00:25
+        A             C
+        00:01         00:08
+        -- R4
+                      C       D
+                      00:09   00:17
+        -- R5
+                      C       D
+                      00:10   00:27
         """
       )
       .egress("D ~ Walk 20s");
@@ -75,14 +81,15 @@ public class G_TwoPathsOverlapping implements RaptorTestConstants {
   }
 
   static List<RaptorModuleTestCase> testCases() {
-    var pathStandard =
-      "Walk 30s ~ A ~ BUS R1 0:01 0:05 ~ B ~ BUS R2 0:06 0:20 ~ D ~ Walk 20s [0:00:30 0:20:20 19m50s Tₙ1 C₁2_440]";
-    var pathAP =
-      "Walk 30s ~ A ~ BUS R1 0:01 0:10 ~ C ~ BUS R2 0:11 0:20 ~ D ~ Walk 20s [0:00:30 0:20:20 19m50s Tₙ1 C₁[2, 1, 0]]";
+    var pathOriginal = "Walk 30s ~ A ~ BUS R1 0:01 0:06 ~ B ~ BUS R2 0:07 0:17 ~ D ~ Walk 20s [0:00:30 0:17:20 16m50s Tₙ1 C₁2_260]";
+    var path1 =
+      "Walk 30s ~ A ~ BUS R3 0:01 0:08 ~ C ~ BUS R4 0:09 0:17 ~ D ~ Walk 20s [0:00:30 0:17:20 16m50s Tₙ1 C₁[1, 1, 0]]";
+    var path2 =
+      "Walk 30s ~ A ~ BUS R1 0:01 0:06 ~ B ~ BUS R2 0:07 0:17 ~ D ~ Walk 20s [0:00:30 0:17:20 16m50s Tₙ1 C₁[1, 2, 0]]";
     return RaptorModuleTestCase.of()
-      .add(standard().forwardOnly(), PathUtils.withoutCost(pathStandard))
-      .add(multiCriteria(), pathStandard)
-      .add(multiCriteriaAP(), pathAP)
+      .add(standard().forwardOnly(), PathUtils.withoutCostAP(path2))
+      .add(multiCriteria(), pathOriginal)
+      .add(multiCriteriaAP(), path1)
       .build();
   }
 

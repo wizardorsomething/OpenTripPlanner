@@ -10,7 +10,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.opentripplanner.raptor.RaptorService;
 import org.opentripplanner.raptor._data.RaptorTestConstants;
-import org.opentripplanner.raptor._data.api.PathUtils;
 import org.opentripplanner.raptor._data.transit.TestTransitData;
 import org.opentripplanner.raptor._data.transit.TestTripSchedule;
 import org.opentripplanner.raptor.api.request.RaptorRequestBuilder;
@@ -77,10 +76,12 @@ public class A_TwoPaths implements RaptorTestConstants {
 
   static List<RaptorModuleTestCase> testCases() {
     var path =
-      "Walk 30s ~ A ~ BUS R3 0:01 0:08 ~ C ~ BUS R4 0:09 0:11 ~ D ~ Walk 20s [0:00:30 0:11:20 10m50s Tₙ1 C₁1_900]";
+      "Walk 30s ~ A ~ BUS R3 0:01 0:08 ~ C ~ BUS R4 0:09 0:11 ~ D ~ Walk 20s [0:00:30 0:11:20 10m50s Tₙ1]";
+    var pathAP =
+      "Walk 30s ~ A ~ BUS R3 0:01 0:08 ~ C ~ BUS R4 0:09 0:11 ~ D ~ Walk 20s [0:00:30 0:11:20 10m50s Tₙ1 C₁[1, 2, 0]]";
     return RaptorModuleTestCase.of()
-      .add(standard(), PathUtils.withoutCost(path))
-      .add(multiCriteriaAP(), path)
+      .add(standard().forwardOnly(), path)
+      .add(multiCriteriaAP(), pathAP)
       .build();
   }
 

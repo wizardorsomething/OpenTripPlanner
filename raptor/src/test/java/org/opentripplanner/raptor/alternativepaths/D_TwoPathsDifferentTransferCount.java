@@ -1,7 +1,7 @@
 package org.opentripplanner.raptor.alternativepaths;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.multiCriteria;
+import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.multiCriteriaAP;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.standard;
 
 import java.util.List;
@@ -20,9 +20,9 @@ import org.opentripplanner.raptor.moduletests.support.RaptorModuleTestCase;
 /**
  * FEATURE UNDER TEST
  * <p>
- * With two alternatives departing at the same time, with one transfer each
- * - RAPTOR should choose the one arriving first
- * - RAPTOR with criterion should choose the one arriving first
+ * With two alternatives departing at the same time, with the second having more transfers but arriving later
+ * - RAPTOR should choose both
+ * - RAPTOR with criterion should choose both
  */
 public class D_TwoPathsDifferentTransferCount implements RaptorTestConstants {
 
@@ -80,13 +80,13 @@ public class D_TwoPathsDifferentTransferCount implements RaptorTestConstants {
 
   static List<RaptorModuleTestCase> testCases() {
     var path1 =
-      "Walk 30s ~ A ~ BUS R3 0:01 0:06 ~ B ~ BUS R4 0:07 0:12 ~ C ~ BUS R5 0:13 0:18 ~ D ~ Walk 20s [0:00:30 0:18:20 17m50s Tₙ2 C₁2_920]";
+      "Walk 30s ~ A ~ BUS R3 0:01 0:06 ~ B ~ BUS R4 0:07 0:12 ~ C ~ BUS R5 0:13 0:18 ~ D ~ Walk 20s [0:00:30 0:18:20 17m50s Tₙ2 C₁[1, 2, 2, 0]]";
     var path2 =
-      "Walk 30s ~ A ~ BUS R1 0:01 0:11 ~ E ~ BUS R2 0:12 0:27 ~ D ~ Walk 20s [0:00:30 0:27:20 26m50s Tₙ1 C₁2_860]";
+      "Walk 30s ~ A ~ BUS R1 0:01 0:11 ~ E ~ BUS R2 0:12 0:27 ~ D ~ Walk 20s [0:00:30 0:27:20 26m50s Tₙ1 C₁[1, 2, 0]]";
     var path = path1 + "\n" + path2;
     return RaptorModuleTestCase.of()
-      .add(standard(), PathUtils.withoutCost(path))
-      .add(multiCriteria(), path)
+      .add(standard().forwardOnly(), PathUtils.withoutCostAP(path))
+      .add(multiCriteriaAP(), path)
       .build();
   }
 

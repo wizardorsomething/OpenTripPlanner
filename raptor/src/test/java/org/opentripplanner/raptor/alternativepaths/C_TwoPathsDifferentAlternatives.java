@@ -1,6 +1,7 @@
 package org.opentripplanner.raptor.alternativepaths;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.multiCriteriaAP;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.standard;
 
 import java.util.List;
@@ -9,6 +10,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.opentripplanner.raptor.RaptorService;
 import org.opentripplanner.raptor._data.RaptorTestConstants;
+import org.opentripplanner.raptor._data.api.PathUtils;
 import org.opentripplanner.raptor._data.transit.TestTransitData;
 import org.opentripplanner.raptor._data.transit.TestTripSchedule;
 import org.opentripplanner.raptor.api.request.RaptorRequestBuilder;
@@ -78,9 +80,14 @@ public class C_TwoPathsDifferentAlternatives implements RaptorTestConstants {
   }
 
   static List<RaptorModuleTestCase> testCases() {
-    var path =
-      "Walk 30s ~ A ~ BUS R3 0:01 0:08 ~ C ~ BUS R4 0:09 0:11 ~ D ~ Walk 20s [0:00:30 0:11:20 10m50s Tₙ1]";
-    return RaptorModuleTestCase.of().add(standard(), path).build();
+    var path1 =
+      "Walk 30s ~ A ~ BUS R3 0:01 0:08 ~ C ~ BUS R4 0:09 0:11 ~ D ~ Walk 20s [0:00:30 0:11:20 10m50s Tₙ1 C₁[1, 2, 0]]";
+    var path2 =
+      "Walk 30s ~ A ~ BUS R1 0:01 0:06 ~ B ~ BUS R2 0:07 0:17 ~ D ~ Walk 20s [0:00:30 0:17:20 16m50s Tₙ1 C₁[1, 1, 0]]";
+    return RaptorModuleTestCase.of()
+      .add(standard().forwardOnly(), PathUtils.withoutCostAP(path1))
+      .add(multiCriteriaAP(), path1 + '\n' + path2)
+      .build();
   }
 
   @ParameterizedTest

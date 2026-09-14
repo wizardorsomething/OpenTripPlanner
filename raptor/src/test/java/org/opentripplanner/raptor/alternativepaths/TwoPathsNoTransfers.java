@@ -2,6 +2,7 @@ package org.opentripplanner.raptor.alternativepaths;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.multiCriteriaAP;
+import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.standard;
 
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
@@ -21,7 +22,7 @@ import org.opentripplanner.raptor.moduletests.support.RaptorModuleTestCase;
  * Raptor should return a path if it exists for the most basic case with one route with one trip, an
  * access and an egress path.
  */
-public class PathCountTest implements RaptorTestConstants {
+public class TwoPathsNoTransfers implements RaptorTestConstants {
 
   private final TestTransitData data = new TestTransitData();
   private final RaptorRequestBuilder<TestTripSchedule> requestBuilder = data.requestBuilder();
@@ -45,8 +46,19 @@ public class PathCountTest implements RaptorTestConstants {
   @BeforeEach
   void setup() {
     data
-      .access("Walk 1s ~ A")
-      .egress("C ~ Walk 1s");
+      .access("Walk 30s ~ B")
+      .access("Walk 50s ~ A")
+      .withTimetables(
+        """
+        -- R1
+        B      C      D
+        00:01  00:06  00:16
+        -- R2
+        A      C      D
+        00:01  00:06  00:20
+        """
+      )
+      .egress("D ~ Walk 20s");
 
     requestBuilder
       .searchParams()
@@ -56,61 +68,17 @@ public class PathCountTest implements RaptorTestConstants {
   }
 
   static List<RaptorModuleTestCase> testCases() {
-    // Cost: 1 at egress stop (maxAlternatives=1, count=0), 4 from walking paths.
-    var path = "Walk 1s ~ A ~ BUS R1 0:01 0:16 ~ C ~ Walk 1s [0:00:59 0:16:01 15m2s Tₙ0 C₁[1, 0]]";
-    return RaptorModuleTestCase.of().add(multiCriteriaAP(), path).build();
+    var path = "Walk 30s ~ B ~ BUS R1 0:01 0:16 ~ D ~ Walk 20s [0:00:30 0:16:20 15m50s Tₙ0]";
+    var pathAP = "Walk 30s ~ B ~ BUS R1 0:01 0:16 ~ D ~ Walk 20s [0:00:30 0:16:20 15m50s Tₙ0 C₁[1, 0]]";
+    return RaptorModuleTestCase.of()
+      .add(standard().forwardOnly(), path)
+      .add(multiCriteriaAP(), pathAP)
+      .build();
   }
 
   @ParameterizedTest
   @MethodSource("testCases")
-  void testAccessStop(RaptorModuleTestCase testCase) {
-    // R2 goes through first stop, but not destination
-    data.withTimetables(
-        """
-        -- R1
-        A      B      C
-        00:01  00:06  00:16
-        -- R2
-        A      B      E
-        00:03  00:10  00:20
-        """
-      );
-    assertEquals(testCase.expected(), testCase.run(raptorService, data, requestBuilder));
-
-  }
-
-  @ParameterizedTest
-  @MethodSource("testCases")
-  void testMiddleStop(RaptorModuleTestCase testCase) {
-    // R2 goes through second stop, but not destination
-    data.withTimetables(
-        """
-        -- R1
-        A      B      C
-        00:01  00:06  00:16
-        -- R2
-        D      B      E
-        00:03  00:10  00:20
-        """
-      );
+  void testRaptor(RaptorModuleTestCase testCase) {
     assertEquals(testCase.expected(), testCase.run(raptorService, data, requestBuilder));
   }
-
-  @ParameterizedTest
-  @MethodSource("testCases")
-  void testEgressStop(RaptorModuleTestCase testCase) {
-    // R2 goes only through destination
-    data.withTimetables(
-        """
-        -- R1
-        A      B      C
-        00:01  00:06  00:16
-        -- R2
-        D      E      C
-        00:03  00:10  00:20
-        """
-      );
-    assertEquals(testCase.expected(), testCase.run(raptorService, data, requestBuilder));
-  }
-
 }

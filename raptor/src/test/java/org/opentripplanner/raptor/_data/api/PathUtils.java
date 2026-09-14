@@ -42,6 +42,10 @@ public class PathUtils {
     return path.replaceAll(" C₁[\\d_]+", "");
   }
 
+  public static String withoutCostAP(String path) {
+    return path.replaceAll(" C₁[^]]+]", "");
+  }
+
   public static String[] withoutCost(String... paths) {
     return Stream.of(paths)
       .map(path -> withoutCost(path))
