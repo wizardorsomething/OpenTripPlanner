@@ -40,13 +40,13 @@ public class LeximinPath<T extends RaptorTripSchedule> extends Path<T> {
     PathLeg<T> leg = accessLeg;
     c1PathList.add(leg.c1());
     while (!leg.isEgressLeg()) {
-      // System.out.println(leg + ", c1: " + leg.c1());
       if (leg.isTransitLeg()) {
         c1PathList.add(leg.c1());
       }
       leg = leg.nextLeg();
     }
-    this.c1Path = c1PathList.build().toArray();
+    var array = c1PathList.build().toArray();
+    this.c1Path = Arrays.copyOf(array, array.length-1);
   }
 
   public final int[] getC1Path() {
