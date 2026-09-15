@@ -102,10 +102,10 @@ public class LeximinPath<T extends RaptorTripSchedule> extends Path<T> {
     int lenR = pathR.length;
     int minLen = Math.min(lenL, lenR);
     for (int i = 0; i < minLen; i++) {
-      int lv = pathL[lenL - 1 - i];
-      int rv = pathR[lenR - 1 - i];
+      int lv = pathL[i];
+      int rv = pathR[i];
       if (lv != rv) {
-        return lv < rv;
+        return lv > rv;
       }
     }
     return minLen == lenL && minLen < lenR;

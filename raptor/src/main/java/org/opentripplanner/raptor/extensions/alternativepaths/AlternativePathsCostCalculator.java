@@ -85,7 +85,7 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
     minAlternatives = Integer.MAX_VALUE;
     maxAlternatives = 0;
     for (int stop : tripsByStop.keySet()) {
-      int s = stopArrivalCount(stop, earliest).size();
+      int s = stopArrivalCount(stop, earliest);
       if (s < minAlternatives) {
         minAlternatives = s;
       }
@@ -105,7 +105,7 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
           LOG.debug("{} transfers: {}", transfersFromStop.get(stop).size(), transfersFromStop.get(stop).stream().map(transfer -> transfer.toFormattedString(transitData.stopNameResolver())).collect(Collectors.joining(", ")));
         }
       }
-      LOG.debug("{} Egress stops: {}", egresses.stream().count(), egresses.stream().map(resolver::apply).toList());
+      LOG.debug("{} Egress stops: {}", egresses.size(), egresses.stream().map(resolver::apply).toList());
     }
   }
 
@@ -145,21 +145,19 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
     int toStopIndex
   ) {
     if (egresses.contains(toStopIndex)) {
-      return 0;
+      return (maxAlternatives+1) * scalingFactor;
     }
     return stopArrivalCost(toStopIndex, trip.arrival(stopIndexToIdInPattern(toStopIndex, trip.pattern())));
   }
 
-  private List<StopTimeEntry<T>> stopArrivalCount(
+  private int stopArrivalCount(
     int stopIndex,
     int arrivalTime
   ) {
     int count = 0;
-    ArrayList<StopTimeEntry<T>> alternatives = new ArrayList<>();
     for (StopTimeEntry<T> alternative : tripsByStop.get(stopIndex)) {
       if (alternative.departureTime() > arrivalTime) {
         count += 1;
-        alternatives.add(alternative);
       }
     }
     for (var nearbyStop : transfersFromStop.getOrDefault(stopIndex, new HashSet<>())) {
@@ -167,11 +165,10 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
       for (StopTimeEntry<T> alternative : tripsByStop.getOrDefault(nearbyStop.targetStop(), new ArrayList<>())) {
         if (alternative.departureTime() > arrivalTimeWithWalk) {
           count += 1;
-          alternatives.add(alternative);
         }
       }
     }
-    return alternatives;
+    return count;
   }
 
   public int stopArrivalCost(
@@ -179,17 +176,15 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
     int arrivalTime
   ) {
     if (tripsByStop.containsKey(stopIndex)) {
-      var alternatives = stopArrivalCount(stopIndex, arrivalTime);
-      int count = alternatives.size();
+      int count = stopArrivalCount(stopIndex, arrivalTime);
       if (count > maxAlternatives) {
         // System.out.println("Impossible alternative count: " + count);
-        LOG.warn("Impossible alternative count at {}: {}, {}", transitData.stopNameResolver().apply(stopIndex), count, alternatives.stream().map(StopTimeEntry::toFormattedString).toList());
+        LOG.warn("Impossible alternative count at {}: {}", transitData.stopNameResolver().apply(stopIndex), count);
       }
-      // +1 to ensure we never return 0
-      return (maxAlternatives + 1 - count) * scalingFactor;
+      return count * scalingFactor;
     } else {
       // System.out.println("Unknown stop in calculator: " + stopIndex);
-      return (maxAlternatives*2) * scalingFactor;
+      return 0;
     }
   }
 
