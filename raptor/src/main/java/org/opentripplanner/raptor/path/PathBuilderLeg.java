@@ -215,6 +215,19 @@ public class PathBuilderLeg<T extends RaptorTripSchedule> {
   public int c1(RaptorCostCalculator<T> costCalculator, RaptorSlackProvider slackProvider) {
     if (costCalculator == null) {
       return RaptorCostCalculator.ZERO_COST;
+    } else if (costCalculator instanceof LeximinMarker) {
+      // I will leave this here so, should this function actually be used somewhere at some point, it will be correct
+      // But it is not actually used anywhere important
+      if (isAccess() || isTransit()) {
+        return ((LeximinMarker) costCalculator).stopArrivalCost(toStop(), toTime);
+      }
+      if (isTransfer()) {
+        return 0;
+      }
+      if (isEgress()) {
+        // this should not be used anywhere for anything
+        return 0;
+      }
     }
     if (isAccess()) {
       return asAccessLeg().streetPath.c1();
@@ -349,7 +362,7 @@ public class PathBuilderLeg<T extends RaptorTripSchedule> {
     PathLeg<T> nextLeg = next.createPathLeg(costCalculator, slackProvider);
     var accessPath = asAccessLeg().streetPath;
     if (costCalculator instanceof LeximinMarker) {
-      int cost = ((LeximinMarker) costCalculator).stopArrivalCost(accessPath.stop(), accessPath.earliestDepartureTime(0)+accessPath.durationInSeconds());
+      int cost = ((LeximinMarker) costCalculator).stopArrivalCost(accessPath.stop(), toTime);
       return new AccessPathLeg<>(accessPath, fromTime, toTime, cost, nextLeg);
     }
     int cost = cost(costCalculator, accessPath);
@@ -420,6 +433,9 @@ public class PathBuilderLeg<T extends RaptorTripSchedule> {
     PathLeg<T> nextLeg = next.createPathLeg(costCalculator, slackProvider);
     var transfer = asTransferLeg().transfer;
     int cost = cost(costCalculator, transfer);
+    if (costCalculator instanceof LeximinMarker) {
+      cost = 0;
+    }
     return new TransferPathLeg<>(fromStop(), fromTime, toTime, cost, transfer, nextLeg);
   }
 
@@ -565,6 +581,8 @@ public class PathBuilderLeg<T extends RaptorTripSchedule> {
   ) {
     if (costCalculator == null) {
       return RaptorCostCalculator.ZERO_COST;
+    } else if (costCalculator instanceof LeximinMarker) {
+      return ((LeximinMarker) costCalculator).stopArrivalCost(toStop(), toTime());
     }
 
     var leg = asTransitLeg();
