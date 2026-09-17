@@ -318,13 +318,23 @@ public final class McRangeRaptorWorkerState<T extends RaptorTripSchedule>
     int alightTime,
     int alightSlack
   ) {
-    return calculatorGeneralizedCost.transitArrivalCost(
-      ride.boardC1(),
-      alightSlack,
-      alightTime - ride.boardTime(),
-      ride.trip(),
-      alightStop
-    );
+    if (calculatorGeneralizedCost instanceof LeximinMarker) {
+      return calculatorGeneralizedCost.transitArrivalCost(
+        ride.boardC1(),
+        alightSlack,
+        alightTime,
+        ride.trip(),
+        alightStop
+      );
+    } else {
+      return calculatorGeneralizedCost.transitArrivalCost(
+        ride.boardC1(),
+        alightSlack,
+        alightTime - ride.boardTime(),
+        ride.trip(),
+        alightStop
+      );
+    }
   }
 
   private boolean exceedsTimeLimit(int time) {

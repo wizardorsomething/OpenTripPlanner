@@ -1,6 +1,7 @@
 package org.opentripplanner.raptor.extensions.alternativepaths;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -71,11 +72,13 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
         var timetable = route.timetable();
         var pattern = route.pattern();
         int nTrips = timetable.numberOfTripSchedules();
-        int idInPattern = stopIndexToIdInPattern(stop, pattern);
+        var idsInPattern = stopIndexToIdInPattern(stop, pattern);
         for (int i = 0; i < nTrips; i++) {
           T trip = timetable.getTripSchedule(i);
-          if (trip.arrival(idInPattern) > earliest && trip.departure(idInPattern) < latest) {
-            tripsByStop.get(stop).add(new StopTimeEntry<>(trip, trip.arrival(idInPattern), trip.departure(idInPattern)));
+          for (int idInPattern : idsInPattern) {
+            if (trip.arrival(idInPattern) >= earliest && trip.departure(idInPattern) <= latest) {
+              tripsByStop.get(stop).add(new StopTimeEntry<>(trip, trip.arrival(idInPattern), trip.departure(idInPattern)));
+            }
           }
         }
       }
@@ -126,28 +129,31 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
     return 0;
   }
 
-  private int stopIndexToIdInPattern(int stopIndex, RaptorTripPattern pattern) {
+  private HashSet<Integer> stopIndexToIdInPattern(int stopIndex, RaptorTripPattern pattern) {
+    HashSet<Integer> idsInPattern = new HashSet<>();
     for (int position = 0; position < pattern.numberOfStopsInPattern(); position++) {
       if (pattern.stopIndex(position) == stopIndex) {
-        return position;
+        idsInPattern.add(position);
       }
     }
-    LOG.warn("Unknown stop index, this shouldn't happen.");
-    return -1;
+    if (idsInPattern.isEmpty()) {
+      LOG.warn("Unknown stop index, this shouldn't happen.");
+    }
+    return idsInPattern;
   }
 
   @Override
   public int transitArrivalCost(
     int boardCost,
     int alightSlack,
-    int transitDuration,
+    int arrivalTime,
     T trip,
     int toStopIndex
   ) {
     if (egresses.contains(toStopIndex)) {
       return (maxAlternatives+1) * scalingFactor;
     }
-    return stopArrivalCost(toStopIndex, trip.arrival(stopIndexToIdInPattern(toStopIndex, trip.pattern())));
+    return stopArrivalCost(toStopIndex, arrivalTime);
   }
 
   private int stopArrivalCount(
@@ -176,7 +182,7 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
     int arrivalTime
   ) {
     if (tripsByStop.containsKey(stopIndex)) {
-      int count = stopArrivalCount(stopIndex, arrivalTime);
+      int count = alternativesAtStopArrival(stopIndex, arrivalTime).size();
       if (count > maxAlternatives) {
         // System.out.println("Impossible alternative count: " + count);
         LOG.warn("Impossible alternative count at {}: {}", transitData.stopNameResolver().apply(stopIndex), count);
