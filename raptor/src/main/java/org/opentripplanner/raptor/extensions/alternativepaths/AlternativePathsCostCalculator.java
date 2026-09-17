@@ -88,7 +88,7 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
     minAlternatives = Integer.MAX_VALUE;
     maxAlternatives = 0;
     for (int stop : tripsByStop.keySet()) {
-      int s = stopArrivalCount(stop, earliest);
+      int s = alternativesAtStopArrival(stop, earliest).size();
       if (s < minAlternatives) {
         minAlternatives = s;
       }
@@ -102,11 +102,12 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
     System.out.println("Max alternatives: " + maxAlternatives);
     if (LOG.isDebugEnabled()) {
       LOG.debug("Stops:");
-      for (int stop : tripsByStop.keySet().stream().sorted().toList()) {
+      for (int stop : tripsByStop.keySet().stream().sorted(Comparator.comparing(resolver::apply)).toList()) {
         LOG.debug("{}: {} alternatives: {}", resolver.apply(stop), tripsByStop.get(stop).size(), tripsByStop.get(stop).stream().map(StopTimeEntry::toFormattedString).collect(Collectors.joining(", ")));
         if (transfersFromStop.containsKey(stop)) {
-          LOG.debug("{} transfers: {}", transfersFromStop.get(stop).size(), transfersFromStop.get(stop).stream().map(transfer -> transfer.toFormattedString(transitData.stopNameResolver())).collect(Collectors.joining(", ")));
+          LOG.debug("\t{} transfers: {}", transfersFromStop.get(stop).size(), transfersFromStop.get(stop).stream().map(transfer -> transfer.toFormattedString(transitData.stopNameResolver())).collect(Collectors.joining(", ")));
         }
+        LOG.debug("\t{} total alternatives at start", alternativesAtStopArrival(stop, earliest).size());
       }
       LOG.debug("{} Egress stops: {}", egresses.size(), egresses.stream().map(resolver::apply).toList());
     }
@@ -156,25 +157,26 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
     return stopArrivalCost(toStopIndex, arrivalTime);
   }
 
-  private int stopArrivalCount(
+  private HashSet<T> alternativesAtStopArrival(
     int stopIndex,
     int arrivalTime
   ) {
-    int count = 0;
+    HashSet<T> countedTrips = new HashSet<>();
     for (StopTimeEntry<T> alternative : tripsByStop.get(stopIndex)) {
-      if (alternative.departureTime() > arrivalTime) {
-        count += 1;
+      // it needs to be >=, not >, so access paths are included properly, since they may calculate arrival time as exactly equal to trip departure time
+      if (alternative.departureTime() >= arrivalTime) {
+        countedTrips.add(alternative.trip());
       }
     }
     for (var nearbyStop : transfersFromStop.getOrDefault(stopIndex, new HashSet<>())) {
       int arrivalTimeWithWalk = arrivalTime + nearbyStop.walkDurationSeconds();
       for (StopTimeEntry<T> alternative : tripsByStop.getOrDefault(nearbyStop.targetStop(), new ArrayList<>())) {
-        if (alternative.departureTime() > arrivalTimeWithWalk) {
-          count += 1;
+        if (alternative.departureTime() >= arrivalTimeWithWalk) {
+          countedTrips.add(alternative.trip());
         }
       }
     }
-    return count;
+    return countedTrips;
   }
 
   public int stopArrivalCost(
