@@ -206,14 +206,9 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
     int minNumTransfers,
     int fromStopIndex
   ) {
-    if (minNumTransfers > -1) {
-      // @TODO not a guaranteed lower bound since it's not filtered
-      return minAlternatives * minNumTransfers;
-    } else {
-      // Remove cost that was added during alighting similar as we do in the costEgress() method
-      // @TODO What does minNumTransfers <= -1 mean???
-      return 0;
-    }
+    // despite the name, this actually returns the maximum count
+    // this is used in Leximin.dummyPath to create a c1Path of length
+    return maxAlternatives;
   }
 
   @Override
