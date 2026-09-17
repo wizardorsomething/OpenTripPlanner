@@ -49,7 +49,6 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
   private HashSet<Integer> egresses;
   private int minAlternatives;
   private int maxAlternatives;
-  private final int scalingFactor = 100;
 
   /**
    * Cost unit: SECONDS - The unit for all input parameters are in the OTP TRANSIT model cost unit
@@ -152,7 +151,7 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
     int toStopIndex
   ) {
     if (egresses.contains(toStopIndex)) {
-      return (maxAlternatives+1) * scalingFactor;
+      return maxAlternatives+1;
     }
     return stopArrivalCost(toStopIndex, arrivalTime);
   }
@@ -189,7 +188,7 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
         // System.out.println("Impossible alternative count: " + count);
         LOG.warn("Impossible alternative count at {}: {}", transitData.stopNameResolver().apply(stopIndex), count);
       }
-      return count * scalingFactor;
+      return count;
     } else {
       // System.out.println("Unknown stop in calculator: " + stopIndex);
       return 0;
@@ -209,7 +208,7 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
   ) {
     if (minNumTransfers > -1) {
       // @TODO not a guaranteed lower bound since it's not filtered
-      return minAlternatives * scalingFactor * minNumTransfers;
+      return minAlternatives * minNumTransfers;
     } else {
       // Remove cost that was added during alighting similar as we do in the costEgress() method
       // @TODO What does minNumTransfers <= -1 mean???
