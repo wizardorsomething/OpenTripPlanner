@@ -109,9 +109,13 @@ public final class PreprocessingRangeRaptorWorkerState<T extends RaptorTripSched
     HashSet<Integer> stops = new HashSet<>();
     Deque<Integer> stack = new ArrayDeque<>();
 
-    System.out.println("stopsReachingStop: "+ stopsReachingStop);
-    System.out.println("routesByStop: " + routesByStop);
-    System.out.println("accessStops: " + accessStops);
+    boolean printForTests = false;
+
+    if (printForTests) {
+      System.out.println("stopsReachingStop: "+ stopsReachingStop);
+      System.out.println("routesByStop: " + routesByStop);
+      System.out.println("accessStops: " + accessStops);
+    }
 
     for (int stop : accessStops) {
       if (stops.add(stop)) {
@@ -130,14 +134,18 @@ public final class PreprocessingRangeRaptorWorkerState<T extends RaptorTripSched
       }
     }
 
-    System.out.println("Stops: " + stops);
+    if (printForTests) {
+      System.out.println("Stops: " + stops);
+    }
     HashMap<Integer, HashSet<Integer>> filteredRoutes = new HashMap<>();
     for (Integer id : stops) {
       if (routesByStop.containsKey(id)) {
         filteredRoutes.put(id, routesByStop.get(id));
       }
     }
-    System.out.println("routesByStopFiltered: " + filteredRoutes);
+    if (printForTests) {
+      System.out.println("routesByStopFiltered: " + filteredRoutes);
+    }
     return new PreprocessingOutput<>(filteredRoutes, stopsReachingStopWalking, new HashSet<>(egressStops));
   }
 
