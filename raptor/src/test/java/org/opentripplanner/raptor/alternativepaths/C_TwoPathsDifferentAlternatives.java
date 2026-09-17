@@ -81,9 +81,9 @@ public class C_TwoPathsDifferentAlternatives implements RaptorTestConstants {
 
   static List<RaptorModuleTestCase> testCases() {
     var path1 =
-      "Walk 30s ~ A ~ BUS R3 0:01 0:08 ~ C ~ BUS R4 0:09 0:11 ~ D ~ Walk 20s [0:00:30 0:11:20 10m50s Tₙ1 C₁[1, 2, 0]]";
+      "Walk 30s ~ A ~ BUS R3 0:01 0:08 ~ C ~ BUS R4 0:09 0:11 ~ D ~ Walk 20s [0:00:30 0:11:20 10m50s Tₙ1 C₁[2, 1]]";
     var path2 =
-      "Walk 30s ~ A ~ BUS R1 0:01 0:06 ~ B ~ BUS R2 0:07 0:17 ~ D ~ Walk 20s [0:00:30 0:17:20 16m50s Tₙ1 C₁[1, 1, 0]]";
+      "Walk 30s ~ A ~ BUS R1 0:01 0:06 ~ B ~ BUS R2 0:07 0:17 ~ D ~ Walk 20s [0:00:30 0:17:20 16m50s Tₙ1 C₁[2, 2]]";
     return RaptorModuleTestCase.of()
       .add(standard().forwardOnly(), PathUtils.withoutCostAP(path1))
       .add(multiCriteriaAP(), path1 + '\n' + path2)

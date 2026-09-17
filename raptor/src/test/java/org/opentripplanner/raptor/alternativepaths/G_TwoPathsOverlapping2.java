@@ -1,6 +1,7 @@
 package org.opentripplanner.raptor.alternativepaths;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.multiCriteria;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.multiCriteriaAP;
 import static org.opentripplanner.raptor.moduletests.support.RaptorModuleTestConfig.standard;
 
@@ -10,6 +11,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.opentripplanner.raptor.RaptorService;
 import org.opentripplanner.raptor._data.RaptorTestConstants;
+import org.opentripplanner.raptor._data.api.PathUtils;
 import org.opentripplanner.raptor._data.transit.TestTransitData;
 import org.opentripplanner.raptor._data.transit.TestTripSchedule;
 import org.opentripplanner.raptor.api.request.RaptorRequestBuilder;
@@ -19,10 +21,11 @@ import org.opentripplanner.raptor.moduletests.support.RaptorModuleTestCase;
 /**
  * FEATURE UNDER TEST
  * <p>
- * Raptor should return a path if it exists for the most basic case with one route with one trip, an
- * access and an egress path.
+ * With two overlapping paths
+ * - RAPTOR should choose the first transfer location
+ * - RAPTOR with criterion should choose the transfer location with additional onward alternatives (here first)
  */
-public class TwoPathsNoTransfers implements RaptorTestConstants {
+public class G_TwoPathsOverlapping2 implements RaptorTestConstants {
 
   private final TestTransitData data = new TestTransitData();
   private final RaptorRequestBuilder<TestTripSchedule> requestBuilder = data.requestBuilder();
@@ -36,6 +39,8 @@ public class TwoPathsNoTransfers implements RaptorTestConstants {
    *
    * Schedule:
    *   R1: 00:01 - 00:06 - 00:16
+   *   R2: 00:01 - 00:08 - 00:10
+   *   R3:         00:10 - 00:20
    *
    * Access (toStop & duration):
    *   1  30s
@@ -46,16 +51,18 @@ public class TwoPathsNoTransfers implements RaptorTestConstants {
   @BeforeEach
   void setup() {
     data
-      .access("Walk 30s ~ B")
-      .access("Walk 50s ~ A")
+      .access("Walk 30s ~ A")
       .withTimetables(
         """
         -- R1
-        B      C      D
-        00:01  00:06  00:16
+        A      B       C
+        00:01  00:05   00:10
         -- R2
-        A      C      D
-        00:01  00:06  00:20
+               B       C      D
+               00:06   00:11  00:20
+        -- R3
+               B              D
+               00:10          00:25
         """
       )
       .egress("D ~ Walk 20s");
@@ -68,10 +75,13 @@ public class TwoPathsNoTransfers implements RaptorTestConstants {
   }
 
   static List<RaptorModuleTestCase> testCases() {
-    var path = "Walk 30s ~ B ~ BUS R1 0:01 0:16 ~ D ~ Walk 20s [0:00:30 0:16:20 15m50s Tₙ0]";
-    var pathAP = "Walk 30s ~ B ~ BUS R1 0:01 0:16 ~ D ~ Walk 20s [0:00:30 0:16:20 15m50s Tₙ0 C₁[1]]";
+    var pathStandard =
+      "Walk 30s ~ A ~ BUS R1 0:01 0:05 ~ B ~ BUS R2 0:06 0:20 ~ D ~ Walk 20s [0:00:30 0:20:20 19m50s Tₙ1 C₁2_440]";
+    var pathAP =
+      "Walk 30s ~ A ~ BUS R1 0:01 0:05 ~ B ~ BUS R2 0:06 0:20 ~ D ~ Walk 20s [0:00:30 0:20:20 19m50s Tₙ1 C₁[1, 2]]";
     return RaptorModuleTestCase.of()
-      .add(standard().forwardOnly(), path)
+      .add(standard().forwardOnly(), PathUtils.withoutCost(pathStandard))
+      .add(multiCriteria(), pathStandard)
       .add(multiCriteriaAP(), pathAP)
       .build();
   }

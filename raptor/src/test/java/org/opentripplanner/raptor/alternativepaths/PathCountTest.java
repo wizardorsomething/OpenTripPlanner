@@ -57,7 +57,7 @@ public class PathCountTest implements RaptorTestConstants {
 
   static List<RaptorModuleTestCase> testCases() {
     // Cost: 1 at egress stop (maxAlternatives=1, count=0), 4 from walking paths.
-    var path = "Walk 1s ~ A ~ BUS R1 0:01 0:16 ~ C ~ Walk 1s [0:00:59 0:16:01 15m2s Tₙ0 C₁[1, 0]]";
+    var path = "Walk 1s ~ A ~ BUS R1 0:01 0:16 ~ C ~ Walk 1s [0:00:59 0:16:01 15m2s Tₙ0 C₁[1]]";
     return RaptorModuleTestCase.of().add(multiCriteriaAP(), path).build();
   }
 

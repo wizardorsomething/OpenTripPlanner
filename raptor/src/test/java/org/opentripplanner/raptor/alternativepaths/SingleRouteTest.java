@@ -64,7 +64,7 @@ public class SingleRouteTest implements RaptorTestConstants {
 
   static List<RaptorModuleTestCase> testCases() {
     var path = "Walk 30s ~ B ~ BUS R1 0:01 0:16 ~ D ~ Walk 20s [0:00:30 0:16:20 15m50s Tₙ0]";
-    var pathAP = "Walk 30s ~ B ~ BUS R1 0:01 0:16 ~ D ~ Walk 20s [0:00:30 0:16:20 15m50s Tₙ0 C₁[1, 0]]";
+    var pathAP = "Walk 30s ~ B ~ BUS R1 0:01 0:16 ~ D ~ Walk 20s [0:00:30 0:16:20 15m50s Tₙ0 C₁[1]]";
     return RaptorModuleTestCase.of()
       .add(standard(), path)
       .add(multiCriteriaAP(), pathAP)

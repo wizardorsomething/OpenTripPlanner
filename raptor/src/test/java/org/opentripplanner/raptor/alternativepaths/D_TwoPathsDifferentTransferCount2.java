@@ -81,7 +81,7 @@ public class D_TwoPathsDifferentTransferCount2 implements RaptorTestConstants {
 
   static List<RaptorModuleTestCase> testCases() {
     var path =
-      "Walk 30s ~ A ~ BUS R1 0:01 0:11 ~ E ~ BUS R2 0:12 0:18 ~ D ~ Walk 20s [0:00:30 0:18:20 17m50s Tₙ1 C₁[1, 2, 0]]";
+      "Walk 30s ~ A ~ BUS R1 0:01 0:11 ~ E ~ BUS R2 0:12 0:18 ~ D ~ Walk 20s [0:00:30 0:18:20 17m50s Tₙ1 C₁[2, 1]]";
     var pathOriginal = "Walk 30s ~ A ~ BUS R1 0:01 0:11 ~ E ~ BUS R2 0:12 0:18 ~ D ~ Walk 20s [0:00:30 0:18:20 17m50s Tₙ1 C₁2_320]";
     return RaptorModuleTestCase.of()
       .add(standard().forwardOnly(), PathUtils.withoutCostAP(path))

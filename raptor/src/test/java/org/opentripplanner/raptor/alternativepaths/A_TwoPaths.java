@@ -78,7 +78,7 @@ public class A_TwoPaths implements RaptorTestConstants {
     var path =
       "Walk 30s ~ A ~ BUS R3 0:01 0:08 ~ C ~ BUS R4 0:09 0:11 ~ D ~ Walk 20s [0:00:30 0:11:20 10m50s Tₙ1]";
     var pathAP =
-      "Walk 30s ~ A ~ BUS R3 0:01 0:08 ~ C ~ BUS R4 0:09 0:11 ~ D ~ Walk 20s [0:00:30 0:11:20 10m50s Tₙ1 C₁[1, 2, 0]]";
+      "Walk 30s ~ A ~ BUS R3 0:01 0:08 ~ C ~ BUS R4 0:09 0:11 ~ D ~ Walk 20s [0:00:30 0:11:20 10m50s Tₙ1 C₁[2, 1]]";
     return RaptorModuleTestCase.of()
       .add(standard().forwardOnly(), path)
       .add(multiCriteriaAP(), pathAP)
