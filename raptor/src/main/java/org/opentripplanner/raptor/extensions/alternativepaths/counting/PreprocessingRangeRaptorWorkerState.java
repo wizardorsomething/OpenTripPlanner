@@ -78,6 +78,7 @@ public final class PreprocessingRangeRaptorWorkerState<T extends RaptorTripSched
   private final HashMap<Integer, HashSet<StopTransfer>> stopsReachingStopWalking;
   private final List<Integer> accessStops;
   private final List<Integer> egressStops;
+  private int windowFactor = 2;
   /**
    * create a BestTimes Range Raptor State for the given context.
    */
@@ -151,6 +152,10 @@ public final class PreprocessingRangeRaptorWorkerState<T extends RaptorTripSched
       System.out.println("routesByStopFiltered: " + filteredRoutes);
     }
     return new PreprocessingOutput<>(filteredRoutes, filteredStopsReachingStopWalking, new HashSet<>(egressStops));
+  }
+
+  public void setWindowFactor(int windowFactor) {
+    this.windowFactor = windowFactor;
   }
 
   @Override
@@ -313,7 +318,7 @@ public final class PreprocessingRangeRaptorWorkerState<T extends RaptorTripSched
   /* private methods */
   private boolean withinSlack(int stop, int alightTime) {
     var optimal = bestTimes.time(stop);
-    return alightTime <= 2 * optimal;
+    return alightTime <= windowFactor * optimal;
   }
 
   private boolean newOverallBestTime(int stop, int alightTime) {

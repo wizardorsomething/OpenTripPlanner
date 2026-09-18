@@ -54,6 +54,8 @@ public class RangeRaptorDynamicSearch<T extends RaptorTripSchedule> {
   private final HeuristicSearchTask<T> fwdHeuristics;
   private final HeuristicSearchTask<T> revHeuristics;
 
+  private final int windowFactor = 2;
+
   public RangeRaptorDynamicSearch(
     RaptorConfig<T> config,
     RaptorTransitDataProvider<T> transitData,
@@ -82,29 +84,26 @@ public class RangeRaptorDynamicSearch<T extends RaptorTripSchedule> {
       // Set search-window and other dynamic calculated parameters
       var dynamicRequest = requestWithDynamicSearchParams(originalRequest);
 
-      if (dynamicRequest.profile().is(MULTI_CRITERIA_AP)) {
-        int timeWindowStart = dynamicSearchWindowCalculator.getEarliestDepartureTime();
-        // @TODO can't (or at least don't know how to) get minimum time including access and egress, so we're just eyeballing it by adding transit time a third time
-        int timeWindowEnd = timeWindowStart + 3 * dynamicSearchWindowCalculator.getHeuristicMinTransitTime();
+      if (originalRequest.profile().is(MULTI_CRITERIA_AP)) {
+        // Set search-window and other dynamic calculated parameters
+        dynamicRequest = requestWithDynamicSearchParamsAP(originalRequest);
         var builder = dynamicRequest
           .mutate()
           // Disable any optimization that is not valid for a heuristic search
           .clearOptimizations()
           .profile(STANDARD)
           .searchDirection(REVERSE);
-        // only consider routes in paths that take at least twice as long as fastest
-        // @TODO removing this breaks everything for some reason
-        builder.searchParams()
-          .latestArrivalTime(timeWindowEnd);
         builder.searchParams().searchOneIterationOnly();
         // Add this last, it depends on generating an alias from the set values
         builder.performanceTimers(
           dynamicRequest.performanceTimers().withNamePrefix(builder.generateAlias())
         );
         RaptorRequest<T> backwardRequest = builder.build();
-        var backwardRouter = config.createPreprocessingRangeRaptor(transitData, backwardRequest);
+        var backwardRouter = config.createPreprocessingRangeRaptor(transitData, backwardRequest, windowFactor);
         backwardRouter.route();
         var routingInfo = backwardRouter.routingInfo();
+        int timeWindowStart = dynamicRequest.searchParams().earliestDepartureTime();
+        int timeWindowEnd = dynamicRequest.searchParams().latestArrivalTime();
         LOG.info("SearchParams Start time (minutes): {}", timeWindowStart/60);
         LOG.info("SearchParams End time (minutes): {}", timeWindowEnd/60);
         LOG.info("Total time window (minutes): {}", (timeWindowEnd-timeWindowStart)/60);
@@ -311,6 +310,24 @@ public class RangeRaptorDynamicSearch<T extends RaptorTripSchedule> {
           originalRequest.searchParams().accessEgressMaxDurationSeconds()
       )
       .build();
+  }
+
+  private RaptorRequest<T> requestWithDynamicSearchParamsAP(RaptorRequest<T> request) {
+    SearchParamsBuilder<T> builder = request.mutate().searchParams();
+
+    if (!request.searchParams().isEarliestDepartureTimeSet()) {
+      builder.earliestDepartureTime(dynamicSearchWindowCalculator.getEarliestDepartureTime());
+    }
+    if (!request.searchParams().isSearchWindowSet()) {
+      builder.searchWindowInSeconds(dynamicSearchWindowCalculator.getSearchWindowSeconds());
+    }
+    if (!request.searchParams().isLatestArrivalTimeSet()) {
+      // even though this is called "minTransitTime", it is, in fact the minimum duration for the whole journey
+      // "minWaitTime" is the time between earliest departure time and the earliest time we actually need to leave for any connection
+      builder.latestArrivalTime(builder.earliestDepartureTime()
+        + windowFactor * (dynamicSearchWindowCalculator.getHeuristicMinTransitTime() + dynamicSearchWindowCalculator.getHeuristicMinWaitTime()));
+    }
+    return builder.build();
   }
 
   private RaptorRequest<T> requestWithDynamicSearchParams(RaptorRequest<T> request) {
