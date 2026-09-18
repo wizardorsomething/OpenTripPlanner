@@ -138,15 +138,19 @@ public final class PreprocessingRangeRaptorWorkerState<T extends RaptorTripSched
       System.out.println("Stops: " + stops);
     }
     HashMap<Integer, HashSet<Integer>> filteredRoutes = new HashMap<>();
+    HashMap<Integer, HashSet<StopTransfer>> filteredStopsReachingStopWalking = new HashMap<>();
     for (Integer id : stops) {
       if (routesByStop.containsKey(id)) {
         filteredRoutes.put(id, routesByStop.get(id));
+      }
+      if (stopsReachingStopWalking.containsKey(id)) {
+        filteredStopsReachingStopWalking.put(id, stopsReachingStopWalking.get(id));
       }
     }
     if (printForTests) {
       System.out.println("routesByStopFiltered: " + filteredRoutes);
     }
-    return new PreprocessingOutput<>(filteredRoutes, stopsReachingStopWalking, new HashSet<>(egressStops));
+    return new PreprocessingOutput<>(filteredRoutes, filteredStopsReachingStopWalking, new HashSet<>(egressStops));
   }
 
   @Override
@@ -286,7 +290,7 @@ public final class PreprocessingRangeRaptorWorkerState<T extends RaptorTripSched
     final int toStop = transfer.stop();
     if (withinSlack(toStop, arrivalTime)) {
       stopsReachingStop.computeIfAbsent(toStop, _ -> new HashSet<>()).add(fromStop);
-      stopsReachingStopWalking.computeIfAbsent(fromStop, _ -> new HashSet<>()).add(new StopTransfer(toStop, transfer.durationInSeconds()));
+      stopsReachingStopWalking.computeIfAbsent(toStop, _ -> new HashSet<>()).add(new StopTransfer(fromStop, transfer.durationInSeconds()));
     }
 
     if (newOverallBestTime(toStop, arrivalTime)) {
