@@ -45,10 +45,11 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
 
   private final RaptorTransitDataProvider<T> transitData;
   private final Map<Integer, List<StopTimeEntry<T>>> tripsByStop;
-  private Map<Integer, HashSet<StopTransfer>> transfersFromStop;
+  private final Map<Integer, List<StopTransfer>> transfersFromStop;
   private HashSet<Integer> egresses;
   private int minAlternatives;
   private int maxAlternatives;
+  private int latest;
 
   /**
    * Cost unit: SECONDS - The unit for all input parameters are in the OTP TRANSIT model cost unit
@@ -63,7 +64,8 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
   public void applyRoutes(PreprocessingOutput<RaptorRoute<T>> routingInfo, int earliest, int latest) {
     var routesByStop = routingInfo.routesByStop();
     var resolver = transitData.stopNameResolver();
-    this.transfersFromStop = routingInfo.transferOptions();
+    this.latest = latest;
+
     egresses = routingInfo.egresses();
     for (int stop : routesByStop.keySet()) {
       tripsByStop.put(stop, new ArrayList<>());
@@ -84,9 +86,15 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
     }
     LOG.info("Number of stops: {}", tripsByStop.size());
 
+    var transfersFromStopSets = routingInfo.transferOptions();
+    for (int stop : transfersFromStopSets.keySet()) {
+      transfersFromStop.put(stop, transfersFromStopSets.get(stop).stream().sorted(Comparator.comparing(StopTransfer::walkDurationSeconds)).toList());
+    }
+
     minAlternatives = Integer.MAX_VALUE;
     maxAlternatives = 0;
     for (int stop : tripsByStop.keySet()) {
+      tripsByStop.get(stop).sort(Comparator.comparing((StopTimeEntry<T> e) -> e.departureTime()).reversed());
       int s = alternativesAtStopArrival(stop, earliest).size();
       if (s < minAlternatives) {
         minAlternatives = s;
@@ -163,16 +171,21 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
     HashSet<T> countedTrips = new HashSet<>();
     for (StopTimeEntry<T> alternative : tripsByStop.get(stopIndex)) {
       // it needs to be >=, not >, so access paths are included properly, since they may calculate arrival time as exactly equal to trip departure time
-      if (alternative.departureTime() >= arrivalTime) {
-        countedTrips.add(alternative.trip());
+      if (alternative.departureTime() < arrivalTime) {
+        break;
       }
+      countedTrips.add(alternative.trip());
     }
-    for (var nearbyStop : transfersFromStop.getOrDefault(stopIndex, new HashSet<>())) {
+    for (var nearbyStop : transfersFromStop.getOrDefault(stopIndex, new ArrayList<>())) {
       int arrivalTimeWithWalk = arrivalTime + nearbyStop.walkDurationSeconds();
+      if (arrivalTimeWithWalk > latest) {
+        break;
+      }
       for (StopTimeEntry<T> alternative : tripsByStop.getOrDefault(nearbyStop.targetStop(), new ArrayList<>())) {
-        if (alternative.departureTime() >= arrivalTimeWithWalk) {
-          countedTrips.add(alternative.trip());
+        if (alternative.departureTime() < arrivalTimeWithWalk) {
+          break;
         }
+        countedTrips.add(alternative.trip());
       }
     }
     return countedTrips;
@@ -207,7 +220,7 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
     int fromStopIndex
   ) {
     // despite the name, this actually returns the maximum count
-    // this is used in Leximin.dummyPath to create a c1Path of length
+    // this is used in Leximin.dummyPath to create a c1Path of length 1
     return maxAlternatives;
   }
 
