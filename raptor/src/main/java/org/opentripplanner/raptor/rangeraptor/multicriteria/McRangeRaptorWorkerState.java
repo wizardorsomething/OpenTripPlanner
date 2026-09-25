@@ -130,8 +130,17 @@ public final class McRangeRaptorWorkerState<T extends RaptorTripSchedule>
 
   public void addAccessToStop(RaptorAccessEgress accessPath, int departureTime) {
     if (calculatorGeneralizedCost instanceof LeximinMarker) {
-      var cost = ((LeximinMarker) calculatorGeneralizedCost).stopArrivalCost(accessPath.stop(), departureTime+accessPath.durationInSeconds());
-      addStopArrival(((StopArrivalFactoryLeximin<T>) stopArrivalFactory).createAccessStopArrival(departureTime, accessPath, cost));
+      var cost = ((LeximinMarker) calculatorGeneralizedCost).stopArrivalCost(
+        accessPath.stop(),
+        departureTime + accessPath.durationInSeconds()
+      );
+      addStopArrival(
+        ((StopArrivalFactoryLeximin<T>) stopArrivalFactory).createAccessStopArrival(
+          departureTime,
+          accessPath,
+          cost
+        )
+      );
     }
 
     addStopArrival(stopArrivalFactory.createAccessStopArrival(departureTime, accessPath));

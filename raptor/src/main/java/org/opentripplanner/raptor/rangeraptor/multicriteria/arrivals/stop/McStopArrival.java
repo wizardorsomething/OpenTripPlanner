@@ -10,7 +10,12 @@ import org.opentripplanner.raptor.spi.RaptorTripSchedule;
  */
 public abstract sealed class McStopArrival<T extends RaptorTripSchedule>
   implements ArrivalView<T>
-  permits LeximinMcStopArrival, AbstractStopArrivalC2, AccessStopArrival, TransferStopArrival, TransitStopArrival {
+  permits
+    LeximinMcStopArrival,
+    AbstractStopArrivalC2,
+    AccessStopArrival,
+    TransferStopArrival,
+    TransitStopArrival {
 
   private final McStopArrival<T> previous;
   private final int round;

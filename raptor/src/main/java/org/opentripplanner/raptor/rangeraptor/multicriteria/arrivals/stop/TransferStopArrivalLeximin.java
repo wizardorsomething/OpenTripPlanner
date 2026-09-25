@@ -11,7 +11,8 @@ import org.opentripplanner.raptor.spi.RaptorTripSchedule;
 /**
  * @param <T> The TripSchedule type defined by the user of the raptor API.
  */
-final class TransferStopArrivalLeximin<T extends RaptorTripSchedule> extends LeximinMcStopArrival<T> {
+final class TransferStopArrivalLeximin<T extends RaptorTripSchedule>
+  extends LeximinMcStopArrival<T> {
 
   private final RaptorTransfer transfer;
 
@@ -58,6 +59,10 @@ final class TransferStopArrivalLeximin<T extends RaptorTripSchedule> extends Lex
 
   @Override
   public LeximinMcStopArrival<T> addSlackToArrivalTime(int slack) {
-    return new TransferStopArrivalLeximin<>((LeximinMcStopArrival<T>) previous(), transfer, arrivalTime() + slack);
+    return new TransferStopArrivalLeximin<>(
+      (LeximinMcStopArrival<T>) previous(),
+      transfer,
+      arrivalTime() + slack
+    );
   }
 }

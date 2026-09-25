@@ -7,8 +7,8 @@ import java.util.function.Function;
 public record PreprocessingOutput<R>(
   HashMap<Integer, HashSet<R>> routesByStop,
   HashMap<Integer, HashSet<StopTransfer>> transferOptions,
-  HashSet<Integer> egresses) {
-
+  HashSet<Integer> egresses
+) {
   public <S> PreprocessingOutput<S> mapRoutes(Function<R, S> mapper) {
     HashMap<Integer, HashSet<S>> mapped = new HashMap<>();
     for (Integer id : routesByStop.keySet()) {

@@ -8,7 +8,8 @@ import org.opentripplanner.raptor.spi.RaptorTripSchedule;
 /**
  * This class is responsible for creating StopArrivals which support accumulated criteria ONE.
  */
-public class StopArrivalFactoryLeximin<T extends RaptorTripSchedule> implements McStopArrivalFactory<T> {
+public class StopArrivalFactoryLeximin<T extends RaptorTripSchedule>
+  implements McStopArrivalFactory<T> {
 
   @Override
   public McStopArrival<T> createAccessStopArrival(
@@ -49,6 +50,10 @@ public class StopArrivalFactoryLeximin<T extends RaptorTripSchedule> implements 
     RaptorTransfer transfer,
     int arrivalTime
   ) {
-    return new TransferStopArrivalLeximin<>((LeximinMcStopArrival<T>) previous, transfer, arrivalTime);
+    return new TransferStopArrivalLeximin<>(
+      (LeximinMcStopArrival<T>) previous,
+      transfer,
+      arrivalTime
+    );
   }
 }

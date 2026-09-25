@@ -46,7 +46,7 @@ public class LeximinPath<T extends RaptorTripSchedule> extends Path<T> {
       leg = leg.nextLeg();
     }
     var array = c1PathList.build().toArray();
-    this.c1Path = Arrays.copyOf(array, array.length-1);
+    this.c1Path = Arrays.copyOf(array, array.length - 1);
   }
 
   public final int[] getC1Path() {
@@ -82,14 +82,19 @@ public class LeximinPath<T extends RaptorTripSchedule> extends Path<T> {
     StringBuilder sb = new StringBuilder(c1Path.length * 6);
     sb.append('[');
     for (int i = 0; i < c1Path.length; i++) {
-      if (i > 0) { sb.append(", "); }
+      if (i > 0) {
+        sb.append(", ");
+      }
       sb.append(c1Path[i]);
     }
     sb.append(']');
     return sb.toString();
   }
 
-  public static <T extends RaptorTripSchedule> boolean compareC1Path(RaptorPath<T> l, RaptorPath<T> r) {
+  public static <T extends RaptorTripSchedule> boolean compareC1Path(
+    RaptorPath<T> l,
+    RaptorPath<T> r
+  ) {
     int[] sortedL = ((LeximinPath<T>) l).getC1Path().clone();
     Arrays.sort(sortedL);
     int[] sortedR = ((LeximinPath<T>) r).getC1Path().clone();
@@ -110,6 +115,4 @@ public class LeximinPath<T extends RaptorTripSchedule> extends Path<T> {
     }
     return minLen == lenL && minLen < lenR;
   }
-
-
 }

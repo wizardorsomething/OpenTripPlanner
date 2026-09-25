@@ -32,13 +32,7 @@ final class AccessStopArrivalLeximin<T extends RaptorTripSchedule> extends Lexim
   }
 
   AccessStopArrivalLeximin(int departureTime, RaptorAccessEgress access, int cost) {
-    super(
-      access.stop(),
-      departureTime,
-      access.durationInSeconds(),
-      cost,
-      access.numberOfRides()
-    );
+    super(access.stop(), departureTime, access.durationInSeconds(), cost, access.numberOfRides());
     this.departureTime = departureTime;
     this.access = access;
   }

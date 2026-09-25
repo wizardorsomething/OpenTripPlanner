@@ -4,7 +4,9 @@ import org.opentripplanner.raptor.spi.RaptorTripSchedule;
 
 public final class LeximinComparators {
 
-  public static <T extends RaptorTripSchedule> ArrivalParetoSetComparatorFactory<McStopArrival<T>> ofCompareC1() {
+  public static <T extends RaptorTripSchedule> ArrivalParetoSetComparatorFactory<
+    McStopArrival<T>
+  > ofCompareC1() {
     return new ArrivalParetoSetComparatorFactory<>(LeximinComparators::compareC1);
   }
 
@@ -25,7 +27,10 @@ public final class LeximinComparators {
   private static <T extends McStopArrival<?>> boolean compareC1(T l, T r) {
     LeximinMcStopArrival<?> ll = (LeximinMcStopArrival<?>) l;
     LeximinMcStopArrival<?> rr = (LeximinMcStopArrival<?>) r;
-    return l.arrivalTime() < r.arrivalTime() || l.round() < r.round() || leximinComparison(ll.c1Path(), rr.c1Path());
+    return (
+      l.arrivalTime() < r.arrivalTime() ||
+      l.round() < r.round() ||
+      leximinComparison(ll.c1Path(), rr.c1Path())
+    );
   }
-
 }

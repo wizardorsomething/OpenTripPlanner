@@ -72,15 +72,15 @@ public class RaptorConfig<T extends RaptorTripSchedule> {
       ctx.useConstrainedTransfers()
     );
     return new PreprocessingRangeRaptor<>(
-        worker,
-        ctx.transitData(),
-        ctx.segments().getFirst().accessPaths(),
-        ctx.roundTracker(),
-        ctx.calculator(),
-        ctx.createLifeCyclePublisher(),
-        ctx.performanceTimers(),
-        environment.timeoutHook()
-      );
+      worker,
+      ctx.transitData(),
+      ctx.segments().getFirst().accessPaths(),
+      ctx.roundTracker(),
+      ctx.calculator(),
+      ctx.createLifeCyclePublisher(),
+      ctx.performanceTimers(),
+      environment.timeoutHook()
+    );
   }
 
   public RaptorRouter<T> createRangeRaptorWithStdWorker(

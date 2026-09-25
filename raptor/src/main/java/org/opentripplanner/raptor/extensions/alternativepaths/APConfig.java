@@ -93,9 +93,19 @@ public class APConfig<T extends RaptorTripSchedule> {
 
   public PreprocessingRangeRaptorWorkerState<T> resolveState() {
     if (state == null) {
-      var accessStops = accessPaths().arrivedOnStreetByNumOfRides(0).stream().map(RaptorAccessEgress::stop).distinct().toList();
+      var accessStops = accessPaths()
+        .arrivedOnStreetByNumOfRides(0)
+        .stream()
+        .map(RaptorAccessEgress::stop)
+        .distinct()
+        .toList();
       System.out.println("accessPaths: " + accessPaths().arrivedOnStreetByNumOfRides(0));
-      var egressStops = egressPaths().listAll().stream().map(RaptorAccessEgress::stop).distinct().toList();
+      var egressStops = egressPaths()
+        .listAll()
+        .stream()
+        .map(RaptorAccessEgress::stop)
+        .distinct()
+        .toList();
       System.out.println("egressPaths: " + egressPaths().listAll());
       //var stops = egressPaths().listAll().stream().filter(path -> path.durationInSeconds() < 60 * walkingLimit).map(RaptorAccessEgress::stop).distinct().toList();
       this.state = oneOf(

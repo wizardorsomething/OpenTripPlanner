@@ -37,9 +37,9 @@ public class TransitPreferencesMapper {
       );
     });
     callWith.argument("alternativePaths", (Boolean useAp) ->
-      transit.withRaptor(b -> b.withProfile(
-        useAp ? RaptorProfile.MULTI_CRITERIA_AP : RaptorProfile.MULTI_CRITERIA
-      ))
+      transit.withRaptor(b ->
+        b.withProfile(useAp ? RaptorProfile.MULTI_CRITERIA_AP : RaptorProfile.MULTI_CRITERIA)
+      )
     );
     /**
     if (OTPFeature.AlternativePaths.isOn()) {

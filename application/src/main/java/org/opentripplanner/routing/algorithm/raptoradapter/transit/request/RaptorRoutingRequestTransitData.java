@@ -117,9 +117,7 @@ public class RaptorRoutingRequestTransitData implements RaptorTransitDataProvide
 
     if (request.preferences().transit().raptor().profile() == RaptorProfile.MULTI_CRITERIA_AP) {
       LOG.info("Created Alternative Paths cost calculator");
-      this.generalizedCostCalculator = new AlternativePathsCostCalculator<>(
-        this
-      );
+      this.generalizedCostCalculator = new AlternativePathsCostCalculator<>(this);
     } else {
       LOG.info("Created default cost calculator");
       this.generalizedCostCalculator = CostCalculatorFactory.createCostCalculator(

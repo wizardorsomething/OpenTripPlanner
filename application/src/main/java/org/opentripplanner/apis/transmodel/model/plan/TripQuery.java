@@ -235,9 +235,7 @@ public class TripQuery {
       .argument(
         GraphQLArgument.newArgument()
           .name("alternativePaths")
-          .description(
-            "Whether the trip uses alternative paths-based routing."
-          )
+          .description("Whether the trip uses alternative paths-based routing.")
           .type(Scalars.GraphQLBoolean)
           .defaultValue(OTPFeature.AlternativePaths.isOn())
           .build()

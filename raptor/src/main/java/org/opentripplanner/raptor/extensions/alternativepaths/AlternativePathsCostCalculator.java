@@ -61,7 +61,11 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
     transfersFromStop = new HashMap<>();
   }
 
-  public void applyRoutes(PreprocessingOutput<RaptorRoute<T>> routingInfo, int earliest, int latest) {
+  public void applyRoutes(
+    PreprocessingOutput<RaptorRoute<T>> routingInfo,
+    int earliest,
+    int latest
+  ) {
     var routesByStop = routingInfo.routesByStop();
     var resolver = transitData.stopNameResolver();
     this.latest = latest;
@@ -88,13 +92,22 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
 
     var transfersFromStopSets = routingInfo.transferOptions();
     for (int stop : transfersFromStopSets.keySet()) {
-      transfersFromStop.put(stop, transfersFromStopSets.get(stop).stream().sorted(Comparator.comparing(StopTransfer::walkDurationSeconds)).toList());
+      transfersFromStop.put(
+        stop,
+        transfersFromStopSets
+          .get(stop)
+          .stream()
+          .sorted(Comparator.comparing(StopTransfer::walkDurationSeconds))
+          .toList()
+      );
     }
 
     minAlternatives = Integer.MAX_VALUE;
     maxAlternatives = 0;
     for (int stop : tripsByStop.keySet()) {
-      tripsByStop.get(stop).sort(Comparator.comparing((StopTimeEntry<T> e) -> e.departureTime()).reversed());
+      tripsByStop
+        .get(stop)
+        .sort(Comparator.comparing((StopTimeEntry<T> e) -> e.departureTime()).reversed());
       int s = alternativesAtStopArrival(stop, earliest).size();
       if (s < minAlternatives) {
         minAlternatives = s;
@@ -109,14 +122,42 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
     System.out.println("Max alternatives: " + maxAlternatives);
     if (LOG.isDebugEnabled()) {
       LOG.debug("Stops:");
-      for (int stop : tripsByStop.keySet().stream().sorted(Comparator.comparing(resolver::apply)).toList()) {
-        LOG.debug("{}: {} alternatives: {}", resolver.apply(stop), tripsByStop.get(stop).size(), tripsByStop.get(stop).stream().map(StopTimeEntry::toFormattedString).collect(Collectors.joining(", ")));
+      for (int stop : tripsByStop
+        .keySet()
+        .stream()
+        .sorted(Comparator.comparing(resolver::apply))
+        .toList()) {
+        LOG.debug(
+          "{}: {} alternatives: {}",
+          resolver.apply(stop),
+          tripsByStop.get(stop).size(),
+          tripsByStop
+            .get(stop)
+            .stream()
+            .map(StopTimeEntry::toFormattedString)
+            .collect(Collectors.joining(", "))
+        );
         if (transfersFromStop.containsKey(stop)) {
-          LOG.debug("\t{} transfers: {}", transfersFromStop.get(stop).size(), transfersFromStop.get(stop).stream().map(transfer -> transfer.toFormattedString(transitData.stopNameResolver())).collect(Collectors.joining(", ")));
+          LOG.debug(
+            "\t{} transfers: {}",
+            transfersFromStop.get(stop).size(),
+            transfersFromStop
+              .get(stop)
+              .stream()
+              .map(transfer -> transfer.toFormattedString(transitData.stopNameResolver()))
+              .collect(Collectors.joining(", "))
+          );
         }
-        LOG.debug("\t{} total alternatives at start", alternativesAtStopArrival(stop, earliest).size());
+        LOG.debug(
+          "\t{} total alternatives at start",
+          alternativesAtStopArrival(stop, earliest).size()
+        );
       }
-      LOG.debug("{} Egress stops: {}", egresses.size(), egresses.stream().map(resolver::apply).toList());
+      LOG.debug(
+        "{} Egress stops: {}",
+        egresses.size(),
+        egresses.stream().map(resolver::apply).toList()
+      );
     }
   }
 
@@ -159,15 +200,12 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
     int toStopIndex
   ) {
     if (egresses.contains(toStopIndex)) {
-      return maxAlternatives+1;
+      return maxAlternatives + 1;
     }
     return stopArrivalCost(toStopIndex, arrivalTime);
   }
 
-  private HashSet<T> alternativesAtStopArrival(
-    int stopIndex,
-    int arrivalTime
-  ) {
+  private HashSet<T> alternativesAtStopArrival(int stopIndex, int arrivalTime) {
     HashSet<T> countedTrips = new HashSet<>();
     for (StopTimeEntry<T> alternative : tripsByStop.get(stopIndex)) {
       // it needs to be >=, not >, so access paths are included properly, since they may calculate arrival time as exactly equal to trip departure time
@@ -181,7 +219,10 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
       if (arrivalTimeWithWalk > latest) {
         break;
       }
-      for (StopTimeEntry<T> alternative : tripsByStop.getOrDefault(nearbyStop.targetStop(), new ArrayList<>())) {
+      for (StopTimeEntry<T> alternative : tripsByStop.getOrDefault(
+        nearbyStop.targetStop(),
+        new ArrayList<>()
+      )) {
         if (alternative.departureTime() < arrivalTimeWithWalk) {
           break;
         }
@@ -191,15 +232,16 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
     return countedTrips;
   }
 
-  public int stopArrivalCost(
-    int stopIndex,
-    int arrivalTime
-  ) {
+  public int stopArrivalCost(int stopIndex, int arrivalTime) {
     if (tripsByStop.containsKey(stopIndex)) {
       int count = alternativesAtStopArrival(stopIndex, arrivalTime).size();
       if (count > maxAlternatives) {
         // System.out.println("Impossible alternative count: " + count);
-        LOG.warn("Impossible alternative count at {}: {}", transitData.stopNameResolver().apply(stopIndex), count);
+        LOG.warn(
+          "Impossible alternative count at {}: {}",
+          transitData.stopNameResolver().apply(stopIndex),
+          count
+        );
       }
       return count;
     } else {
@@ -228,5 +270,4 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
   public int costEgress(int stopIndex, boolean egressHasRides) {
     return 0;
   }
-
 }

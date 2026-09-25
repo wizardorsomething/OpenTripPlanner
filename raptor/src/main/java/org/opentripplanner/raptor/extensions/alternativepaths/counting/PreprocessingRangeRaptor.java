@@ -47,7 +47,8 @@ import org.opentripplanner.raptor.spi.RaptorTripSchedule;
  * @param <T> The TripSchedule type defined by the user of the raptor API.
  */
 @SuppressWarnings("Duplicates")
-public final class PreprocessingRangeRaptor<T extends RaptorTripSchedule> implements RaptorRouter<T> {
+public final class PreprocessingRangeRaptor<T extends RaptorTripSchedule>
+  implements RaptorRouter<T> {
 
   private final PreprocessingRangeRaptorWorker<T> worker;
 

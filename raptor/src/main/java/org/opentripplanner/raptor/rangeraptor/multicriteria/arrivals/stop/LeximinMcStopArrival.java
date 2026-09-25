@@ -13,7 +13,11 @@ import org.opentripplanner.utils.time.TimeUtils;
  */
 public abstract sealed class LeximinMcStopArrival<T extends RaptorTripSchedule>
   extends McStopArrival<T>
-  permits AbstractStopArrivalC2Leximin, AccessStopArrivalLeximin, TransferStopArrivalLeximin, TransitStopArrivalLeximin {
+  permits
+    AbstractStopArrivalC2Leximin,
+    AccessStopArrivalLeximin,
+    TransferStopArrivalLeximin,
+    TransitStopArrivalLeximin {
 
   // collection of costs
   private int[] c1Path;
@@ -27,7 +31,13 @@ public abstract sealed class LeximinMcStopArrival<T extends RaptorTripSchedule>
    * @param arrivalTime  the arrival time for this stop index
    * @param c1           the accumulated criteria-one(cost) at this stop arrival
    */
-  protected LeximinMcStopArrival(LeximinMcStopArrival<T> previous, int round, int stop, int arrivalTime, int c1) {
+  protected LeximinMcStopArrival(
+    LeximinMcStopArrival<T> previous,
+    int round,
+    int stop,
+    int arrivalTime,
+    int c1
+  ) {
     super(previous, round, stop, arrivalTime, c1);
     assignCost(previous.c1Path, c1);
   }
@@ -64,10 +74,12 @@ public abstract sealed class LeximinMcStopArrival<T extends RaptorTripSchedule>
 
   @Override
   public String toString() {
-    return
+    return (
       TimeUtils.timeToStrCompact(arrivalTime()) +
-        " " +
-        ROUNDS.format(round()) + Arrays.toString(c1Path);
+      " " +
+      ROUNDS.format(round()) +
+      Arrays.toString(c1Path)
+    );
   }
 
   private void assignCost(int[] previousCost, int newCost) {

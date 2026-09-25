@@ -99,16 +99,24 @@ public class RangeRaptorDynamicSearch<T extends RaptorTripSchedule> {
           dynamicRequest.performanceTimers().withNamePrefix(builder.generateAlias())
         );
         RaptorRequest<T> backwardRequest = builder.build();
-        var backwardRouter = config.createPreprocessingRangeRaptor(transitData, backwardRequest, windowFactor);
+        var backwardRouter = config.createPreprocessingRangeRaptor(
+          transitData,
+          backwardRequest,
+          windowFactor
+        );
         backwardRouter.route();
         var routingInfo = backwardRouter.routingInfo();
         int timeWindowStart = dynamicRequest.searchParams().earliestDepartureTime();
         int timeWindowEnd = dynamicRequest.searchParams().latestArrivalTime();
-        LOG.info("SearchParams Start time (minutes): {}", timeWindowStart/60);
-        LOG.info("SearchParams End time (minutes): {}", timeWindowEnd/60);
-        LOG.info("Total time window (minutes): {}", (timeWindowEnd-timeWindowStart)/60);
+        LOG.info("SearchParams Start time (minutes): {}", timeWindowStart / 60);
+        LOG.info("SearchParams End time (minutes): {}", timeWindowEnd / 60);
+        LOG.info("Total time window (minutes): {}", (timeWindowEnd - timeWindowStart) / 60);
 
-        ((AlternativePathsCostCalculator<T>) transitData.multiCriteriaCostCalculator()).applyRoutes(routingInfo, timeWindowStart, timeWindowEnd);
+        ((AlternativePathsCostCalculator<T>) transitData.multiCriteriaCostCalculator()).applyRoutes(
+          routingInfo,
+          timeWindowStart,
+          timeWindowEnd
+        );
       }
 
       return createAndRunDynamicRRWorker(dynamicRequest);

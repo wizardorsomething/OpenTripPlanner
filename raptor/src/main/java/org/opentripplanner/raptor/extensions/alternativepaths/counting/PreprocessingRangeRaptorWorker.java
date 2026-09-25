@@ -79,7 +79,7 @@ public final class PreprocessingRangeRaptorWorker<T extends RaptorTripSchedule>
 
   private int iterationDepartureTime;
 
-  private int round;;
+  private int round;
 
   /**
    * @param accessPaths can be null in case the worker is chained - only the first worker has

@@ -79,6 +79,7 @@ public final class PreprocessingRangeRaptorWorkerState<T extends RaptorTripSched
   private final List<Integer> accessStops;
   private final List<Integer> egressStops;
   private int windowFactor = 2;
+
   /**
    * create a BestTimes Range Raptor State for the given context.
    */
@@ -113,7 +114,7 @@ public final class PreprocessingRangeRaptorWorkerState<T extends RaptorTripSched
     boolean printForTests = false;
 
     if (printForTests) {
-      System.out.println("stopsReachingStop: "+ stopsReachingStop);
+      System.out.println("stopsReachingStop: " + stopsReachingStop);
       System.out.println("routesByStop: " + routesByStop);
       System.out.println("accessStops: " + accessStops);
     }
@@ -295,7 +296,9 @@ public final class PreprocessingRangeRaptorWorkerState<T extends RaptorTripSched
     final int toStop = transfer.stop();
     if (withinSlack(toStop, arrivalTime)) {
       stopsReachingStop.computeIfAbsent(toStop, _ -> new HashSet<>()).add(fromStop);
-      stopsReachingStopWalking.computeIfAbsent(toStop, _ -> new HashSet<>()).add(new StopTransfer(fromStop, transfer.durationInSeconds()));
+      stopsReachingStopWalking
+        .computeIfAbsent(toStop, _ -> new HashSet<>())
+        .add(new StopTransfer(fromStop, transfer.durationInSeconds()));
     }
 
     if (newOverallBestTime(toStop, arrivalTime)) {

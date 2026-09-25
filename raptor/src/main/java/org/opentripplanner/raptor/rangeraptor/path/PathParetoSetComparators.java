@@ -68,7 +68,7 @@ public final class PathParetoSetComparators {
         case USE_ARRIVAL_TIME -> comparatorStandardArrivalTime();
         case USE_DEPARTURE_TIME -> comparatorStandardDepartureTime();
       };
-      case USE_C1-> switch (timeConfig) {
+      case USE_C1 -> switch (timeConfig) {
         case USE_TIMETABLE -> comparatorTimetableAndC1();
         case USE_ARRIVAL_TIME -> comparatorArrivalTimeAndC1();
         case USE_DEPARTURE_TIME -> comparatorDepartureTimeAndC1();
@@ -143,33 +143,33 @@ public final class PathParetoSetComparators {
 
   private static <T extends RaptorTripSchedule> ParetoComparator<
     RaptorPath<T>
-    > comparatorTimetableAndC1Leximin() {
+  > comparatorTimetableAndC1Leximin() {
     return (l, r) ->
       compareIterationDepartureTime(l, r) ||
-        compareArrivalTime(l, r) ||
-        compareNumberOfTransfers(l, r) ||
-        compareDurationInclusivePenalty(l, r) ||
-        compareC1Path(l, r);
+      compareArrivalTime(l, r) ||
+      compareNumberOfTransfers(l, r) ||
+      compareDurationInclusivePenalty(l, r) ||
+      compareC1Path(l, r);
   }
 
   private static <T extends RaptorTripSchedule> ParetoComparator<
     RaptorPath<T>
-    > comparatorArrivalTimeAndC1Leximin() {
+  > comparatorArrivalTimeAndC1Leximin() {
     return (l, r) ->
       compareArrivalTime(l, r) ||
-        compareNumberOfTransfers(l, r) ||
-        compareDurationInclusivePenalty(l, r) ||
-        compareC1Path(l, r);
+      compareNumberOfTransfers(l, r) ||
+      compareDurationInclusivePenalty(l, r) ||
+      compareC1Path(l, r);
   }
 
   private static <T extends RaptorTripSchedule> ParetoComparator<
     RaptorPath<T>
-    > comparatorDepartureTimeAndC1Leximin() {
+  > comparatorDepartureTimeAndC1Leximin() {
     return (l, r) ->
       compareDepartureTime(l, r) ||
-        compareNumberOfTransfers(l, r) ||
-        compareDurationInclusivePenalty(l, r) ||
-        compareC1Path(l, r);
+      compareNumberOfTransfers(l, r) ||
+      compareDurationInclusivePenalty(l, r) ||
+      compareC1Path(l, r);
   }
 
   private static <T extends RaptorTripSchedule> ParetoComparator<
