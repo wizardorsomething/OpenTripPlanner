@@ -44,9 +44,7 @@ public class PathCountTest implements RaptorTestConstants {
    */
   @BeforeEach
   void setup() {
-    data
-      .access("Walk 1s ~ A")
-      .egress("C ~ Walk 1s");
+    data.access("Walk 1s ~ A").egress("C ~ Walk 1s");
 
     requestBuilder
       .searchParams()
@@ -66,17 +64,16 @@ public class PathCountTest implements RaptorTestConstants {
   void testAccessStop(RaptorModuleTestCase testCase) {
     // R2 goes through first stop, but not destination
     data.withTimetables(
-        """
-        -- R1
-        A      B      C
-        00:01  00:06  00:16
-        -- R2
-        A      B      E
-        00:03  00:10  00:20
-        """
-      );
+      """
+      -- R1
+      A      B      C
+      00:01  00:06  00:16
+      -- R2
+      A      B      E
+      00:03  00:10  00:20
+      """
+    );
     assertEquals(testCase.expected(), testCase.run(raptorService, data, requestBuilder));
-
   }
 
   @ParameterizedTest
@@ -84,15 +81,15 @@ public class PathCountTest implements RaptorTestConstants {
   void testMiddleStop(RaptorModuleTestCase testCase) {
     // R2 goes through second stop, but not destination
     data.withTimetables(
-        """
-        -- R1
-        A      B      C
-        00:01  00:06  00:16
-        -- R2
-        D      B      E
-        00:03  00:10  00:20
-        """
-      );
+      """
+      -- R1
+      A      B      C
+      00:01  00:06  00:16
+      -- R2
+      D      B      E
+      00:03  00:10  00:20
+      """
+    );
     assertEquals(testCase.expected(), testCase.run(raptorService, data, requestBuilder));
   }
 
@@ -101,16 +98,15 @@ public class PathCountTest implements RaptorTestConstants {
   void testEgressStop(RaptorModuleTestCase testCase) {
     // R2 goes only through destination
     data.withTimetables(
-        """
-        -- R1
-        A      B      C
-        00:01  00:06  00:16
-        -- R2
-        D      E      C
-        00:03  00:10  00:20
-        """
-      );
+      """
+      -- R1
+      A      B      C
+      00:01  00:06  00:16
+      -- R2
+      D      E      C
+      00:03  00:10  00:20
+      """
+    );
     assertEquals(testCase.expected(), testCase.run(raptorService, data, requestBuilder));
   }
-
 }

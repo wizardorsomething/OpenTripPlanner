@@ -33,7 +33,6 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
   private final Map<Integer, List<StopTimeEntry<T>>> tripsByStop;
   private final Map<Integer, List<StopTransfer>> transfersFromStop;
   private HashSet<Integer> egresses;
-  private int minAlternatives;
   private int maxAlternatives;
   private int latest;
 
@@ -109,7 +108,7 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
       );
     }
 
-    minAlternatives = Integer.MAX_VALUE;
+    int minAlternatives = Integer.MAX_VALUE;
     maxAlternatives = 0;
     for (int stop : tripsByStop.keySet()) {
       tripsByStop
@@ -125,8 +124,6 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
     }
     LOG.info("Min alternatives: {}", minAlternatives);
     LOG.info("Max alternatives: {}", maxAlternatives);
-    System.out.println("Min alternatives: " + minAlternatives);
-    System.out.println("Max alternatives: " + maxAlternatives);
     if (LOG.isDebugEnabled()) {
       LOG.debug("Stops:");
       for (int stop : tripsByStop

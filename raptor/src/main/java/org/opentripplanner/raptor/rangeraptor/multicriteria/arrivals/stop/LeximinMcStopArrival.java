@@ -89,7 +89,7 @@ public abstract sealed class LeximinMcStopArrival<T extends RaptorTripSchedule>
     }
     c1Path = new int[previousCost.length + 1];
     System.arraycopy(previousCost, 0, c1Path, 0, idx);
-    System.arraycopy(previousCost, idx, c1Path, idx+1, previousCost.length-idx);
+    System.arraycopy(previousCost, idx, c1Path, idx + 1, previousCost.length - idx);
     c1Path[idx] = newCost;
     // System.out.println(toString());
   }

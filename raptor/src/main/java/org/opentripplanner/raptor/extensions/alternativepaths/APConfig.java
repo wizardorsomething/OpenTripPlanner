@@ -99,14 +99,12 @@ public class APConfig<T extends RaptorTripSchedule> {
         .map(RaptorAccessEgress::stop)
         .distinct()
         .toList();
-      System.out.println("accessPaths: " + accessPaths().arrivedOnStreetByNumOfRides(0));
       var egressStops = egressPaths()
         .listAll()
         .stream()
         .map(RaptorAccessEgress::stop)
         .distinct()
         .toList();
-      System.out.println("egressPaths: " + egressPaths().listAll());
       //var stops = egressPaths().listAll().stream().filter(path -> path.durationInSeconds() < 60 * walkingLimit).map(RaptorAccessEgress::stop).distinct().toList();
       this.state = oneOf(
         new APRangeRaptorWorkerState<>(
