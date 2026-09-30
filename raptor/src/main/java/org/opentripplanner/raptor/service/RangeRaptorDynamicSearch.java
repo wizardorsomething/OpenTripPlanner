@@ -322,19 +322,26 @@ public class RangeRaptorDynamicSearch<T extends RaptorTripSchedule> {
 
   private RaptorRequest<T> requestWithDynamicSearchParamsAP(RaptorRequest<T> request) {
     SearchParamsBuilder<T> builder = request.mutate().searchParams();
-
-    if (!request.searchParams().isEarliestDepartureTimeSet()) {
-      builder.earliestDepartureTime(dynamicSearchWindowCalculator.getEarliestDepartureTime());
-    }
     if (!request.searchParams().isSearchWindowSet()) {
       builder.searchWindowInSeconds(dynamicSearchWindowCalculator.getSearchWindowSeconds());
     }
+    // We use a deterministic search window for cleaner comparison.
+    if (!request.searchParams().isEarliestDepartureTimeSet()) {
+      builder.earliestDepartureTime(builder.latestArrivalTime() - builder.searchWindowInSeconds());
+    }
+    if (!request.searchParams().isLatestArrivalTimeSet()) {
+      builder.latestArrivalTime(builder.earliestDepartureTime() + builder.searchWindowInSeconds());
+    }
+    /***
     if (!request.searchParams().isLatestArrivalTimeSet()) {
       // even though this is called "minTransitTime", it is, in fact the minimum duration for the whole journey
       // "minWaitTime" is the time between earliest departure time and the earliest time we actually need to leave for any connection
-      builder.latestArrivalTime(builder.earliestDepartureTime()
-        + windowFactor * (dynamicSearchWindowCalculator.getHeuristicMinTransitTime() + dynamicSearchWindowCalculator.getHeuristicMinWaitTime()));
+      LOG.info("minTransitTime: {}", dynamicSearchWindowCalculator.getHeuristicMinTransitTime());
+      LOG.info("minWaitTime: {}", dynamicSearchWindowCalculator.getHeuristicMinWaitTime());
+      //builder.latestArrivalTime(builder.earliestDepartureTime()
+      //  + windowFactor * (dynamicSearchWindowCalculator.getHeuristicMinTransitTime() + Math.abs(dynamicSearchWindowCalculator.getHeuristicMinWaitTime())));
     }
+     ***/
     return builder.build();
   }
 
