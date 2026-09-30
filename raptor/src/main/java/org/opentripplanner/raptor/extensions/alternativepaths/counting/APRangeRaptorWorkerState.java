@@ -9,7 +9,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
 import org.opentripplanner.raptor.api.view.TransitArrival;
-import org.opentripplanner.raptor.extensions.alternativepaths.records.PreprocessingOutput;
+import org.opentripplanner.raptor.extensions.alternativepaths.records.APOutput;
 import org.opentripplanner.raptor.extensions.alternativepaths.records.StopTransfer;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RaptorRouterResult;
 import org.opentripplanner.raptor.rangeraptor.standard.StdRaptorRouterResult;
@@ -39,7 +39,7 @@ import org.opentripplanner.raptor.spi.RaptorTripSchedule;
  *
  * @param <T> The TripSchedule type defined by the user of the raptor API.
  */
-public final class PreprocessingRangeRaptorWorkerState<T extends RaptorTripSchedule>
+public final class APRangeRaptorWorkerState<T extends RaptorTripSchedule>
   implements StdWorkerState<T> {
 
   /**
@@ -83,7 +83,7 @@ public final class PreprocessingRangeRaptorWorkerState<T extends RaptorTripSched
   /**
    * create a BestTimes Range Raptor State for the given context.
    */
-  public PreprocessingRangeRaptorWorkerState(
+  public APRangeRaptorWorkerState(
     RaptorTransitCalculator<T> calculator,
     BestTimes bestTimes,
     StopArrivalsState<T> stopArrivalsState,
@@ -107,7 +107,7 @@ public final class PreprocessingRangeRaptorWorkerState<T extends RaptorTripSched
     this.egressStops = egressStops;
   }
 
-  public PreprocessingOutput<Integer> routingInfo() {
+  public APOutput<T> routingInfo() {
     HashSet<Integer> stops = new HashSet<>();
     Deque<Integer> stack = new ArrayDeque<>();
 
@@ -152,7 +152,11 @@ public final class PreprocessingRangeRaptorWorkerState<T extends RaptorTripSched
     if (printForTests) {
       System.out.println("routesByStopFiltered: " + filteredRoutes);
     }
-    return new PreprocessingOutput<>(filteredRoutes, filteredStopsReachingStopWalking, new HashSet<>(egressStops));
+    return new APOutput<>(
+      filteredTrips,
+      filteredStopsReachingStopWalking,
+      new HashSet<>(egressStops)
+    );
   }
 
   public void setWindowFactor(int windowFactor) {

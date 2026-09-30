@@ -3,7 +3,7 @@ package org.opentripplanner.raptor.extensions.alternativepaths.counting;
 import java.util.Collection;
 import org.opentripplanner.raptor.api.debug.RaptorTimers;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
-import org.opentripplanner.raptor.extensions.alternativepaths.records.PreprocessingOutput;
+import org.opentripplanner.raptor.extensions.alternativepaths.records.APOutput;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RangeRaptorWorker;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RaptorRouterResult;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RoutingStrategy;
@@ -49,7 +49,7 @@ import org.opentripplanner.raptor.spi.RaptorTripSchedule;
  * @param <T> The TripSchedule type defined by the user of the raptor API.
  */
 @SuppressWarnings("Duplicates")
-public final class PreprocessingRangeRaptorWorker<T extends RaptorTripSchedule>
+public final class APRangeRaptorWorker<T extends RaptorTripSchedule>
   implements RangeRaptorWorker<T> {
 
   private final RoutingStrategy<T> transitWorker;
@@ -63,7 +63,7 @@ public final class PreprocessingRangeRaptorWorker<T extends RaptorTripSchedule>
    * object-oriented approach. There were no performance differences(=> GC is not the bottleneck),
    * so we dropped the integer array implementation.
    */
-  private final PreprocessingRangeRaptorWorkerState<T> state;
+  private final APRangeRaptorWorkerState<T> state;
 
   private final RaptorTransitDataProvider<T> transitData;
 
@@ -85,8 +85,8 @@ public final class PreprocessingRangeRaptorWorker<T extends RaptorTripSchedule>
    * @param accessPaths can be null in case the worker is chained - only the first worker has
    *                    access.
    */
-  public PreprocessingRangeRaptorWorker(
-    PreprocessingRangeRaptorWorkerState<T> state,
+  public APRangeRaptorWorker(
+    APRangeRaptorWorkerState<T> state,
     RoutingStrategy<T> transitWorker,
     RaptorTransitDataProvider<T> transitData,
     SlackProvider slackProvider,
@@ -109,8 +109,8 @@ public final class PreprocessingRangeRaptorWorker<T extends RaptorTripSchedule>
     lifeCycle.onPrepareForNextRound(round -> this.round = round);
   }
 
-  public PreprocessingOutput<RaptorRoute<T>> getRoutingInfo() {
-    return state.routingInfo().mapRoutes(transitData::getRouteForIndex);
+  public APOutput<T> getRoutingInfo() {
+    return state.routingInfo();
   }
 
   /**

@@ -3,7 +3,7 @@ package org.opentripplanner.raptor.extensions.alternativepaths.counting;
 import static java.util.Objects.requireNonNull;
 
 import org.opentripplanner.raptor.api.debug.RaptorTimers;
-import org.opentripplanner.raptor.extensions.alternativepaths.records.PreprocessingOutput;
+import org.opentripplanner.raptor.extensions.alternativepaths.records.APOutput;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RaptorRouter;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RaptorRouterResult;
 import org.opentripplanner.raptor.rangeraptor.lifecycle.LifeCycleEventPublisher;
@@ -12,7 +12,6 @@ import org.opentripplanner.raptor.rangeraptor.transit.RaptorTransitCalculator;
 import org.opentripplanner.raptor.rangeraptor.transit.RoundTracker;
 import org.opentripplanner.raptor.spi.IntIterator;
 import org.opentripplanner.raptor.spi.RaptorConstants;
-import org.opentripplanner.raptor.spi.RaptorRoute;
 import org.opentripplanner.raptor.spi.RaptorTransitDataProvider;
 import org.opentripplanner.raptor.spi.RaptorTripSchedule;
 
@@ -47,10 +46,10 @@ import org.opentripplanner.raptor.spi.RaptorTripSchedule;
  * @param <T> The TripSchedule type defined by the user of the raptor API.
  */
 @SuppressWarnings("Duplicates")
-public final class PreprocessingRangeRaptor<T extends RaptorTripSchedule>
+public final class APRangeRaptor<T extends RaptorTripSchedule>
   implements RaptorRouter<T> {
 
-  private final PreprocessingRangeRaptorWorker<T> worker;
+  private final APRangeRaptorWorker<T> worker;
 
   /**
    * The round tracker keep track for the current Raptor round, and abort the search if the round
@@ -72,8 +71,8 @@ public final class PreprocessingRangeRaptor<T extends RaptorTripSchedule>
 
   private final int minNumberOfRounds;
 
-  public PreprocessingRangeRaptor(
-    PreprocessingRangeRaptorWorker<T> worker,
+  public APRangeRaptor(
+    APRangeRaptorWorker<T> worker,
     RaptorTransitDataProvider<T> transitData,
     AccessPaths accessPaths,
     RoundTracker roundTracker,
@@ -93,7 +92,7 @@ public final class PreprocessingRangeRaptor<T extends RaptorTripSchedule>
     this.timeoutHook = requireNonNull(timeoutHook);
   }
 
-  public PreprocessingOutput<RaptorRoute<T>> routingInfo() {
+  public APOutput<T> routingInfo() {
     return worker.getRoutingInfo();
   }
 

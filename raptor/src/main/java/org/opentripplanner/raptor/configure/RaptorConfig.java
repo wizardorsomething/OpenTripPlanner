@@ -6,8 +6,8 @@ import org.opentripplanner.raptor.api.request.RaptorEnvironment;
 import org.opentripplanner.raptor.api.request.RaptorRequest;
 import org.opentripplanner.raptor.api.request.RaptorTuningParameters;
 import org.opentripplanner.raptor.extensions.alternativepaths.APConfig;
-import org.opentripplanner.raptor.extensions.alternativepaths.counting.PreprocessingRangeRaptor;
-import org.opentripplanner.raptor.extensions.alternativepaths.counting.PreprocessingRangeRaptorWorker;
+import org.opentripplanner.raptor.extensions.alternativepaths.counting.APRangeRaptor;
+import org.opentripplanner.raptor.extensions.alternativepaths.counting.APRangeRaptorWorker;
 import org.opentripplanner.raptor.extensions.extrasearch.ExtraMcRouterSearch;
 import org.opentripplanner.raptor.rangeraptor.ConcurrentCompositeRaptorRouter;
 import org.opentripplanner.raptor.rangeraptor.DefaultRangeRaptorWorker;
@@ -50,7 +50,7 @@ public class RaptorConfig<T extends RaptorTripSchedule> {
     return SearchContext.of(request, tuningParameters, transit).build();
   }
 
-  public PreprocessingRangeRaptor<T> createPreprocessingRangeRaptor(
+  public APRangeRaptor<T> createPreprocessingRangeRaptor(
     RaptorTransitDataProvider<T> transitData,
     RaptorRequest<T> request,
     int windowFactor
@@ -60,7 +60,7 @@ public class RaptorConfig<T extends RaptorTripSchedule> {
     var ctx = context.segments().getFirst().parent();
     var state = apConfig.resolveState();
     state.setWindowFactor(windowFactor);
-    var worker = new PreprocessingRangeRaptorWorker<>(
+    var worker = new APRangeRaptorWorker<>(
       state,
       apConfig.strategy(),
       ctx.transitData(),
@@ -71,7 +71,7 @@ public class RaptorConfig<T extends RaptorTripSchedule> {
       ctx.performanceTimers(),
       ctx.useConstrainedTransfers()
     );
-    return new PreprocessingRangeRaptor<>(
+    return new APRangeRaptor<>(
       worker,
       ctx.transitData(),
       ctx.segments().getFirst().accessPaths(),

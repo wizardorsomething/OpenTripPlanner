@@ -8,7 +8,7 @@ import java.util.Objects;
 import java.util.Set;
 import javax.annotation.Nullable;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
-import org.opentripplanner.raptor.extensions.alternativepaths.counting.PreprocessingRangeRaptorWorkerState;
+import org.opentripplanner.raptor.extensions.alternativepaths.counting.APRangeRaptorWorkerState;
 import org.opentripplanner.raptor.rangeraptor.context.SearchContext;
 import org.opentripplanner.raptor.rangeraptor.internalapi.ParetoSetCost;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RaptorWorkerState;
@@ -91,7 +91,7 @@ public class APConfig<T extends RaptorTripSchedule> {
     };
   }
 
-  public PreprocessingRangeRaptorWorkerState<T> resolveState() {
+  public APRangeRaptorWorkerState<T> resolveState() {
     if (state == null) {
       var accessStops = accessPaths()
         .arrivedOnStreetByNumOfRides(0)
@@ -109,7 +109,7 @@ public class APConfig<T extends RaptorTripSchedule> {
       System.out.println("egressPaths: " + egressPaths().listAll());
       //var stops = egressPaths().listAll().stream().filter(path -> path.durationInSeconds() < 60 * walkingLimit).map(RaptorAccessEgress::stop).distinct().toList();
       this.state = oneOf(
-        new PreprocessingRangeRaptorWorkerState<>(
+        new APRangeRaptorWorkerState<>(
           ctx.calculator(),
           resolveBestTimes(),
           createStopArrivals(),
@@ -122,7 +122,7 @@ public class APConfig<T extends RaptorTripSchedule> {
         StdWorkerState.class
       );
     }
-    return (PreprocessingRangeRaptorWorkerState<T>) state;
+    return (APRangeRaptorWorkerState<T>) state;
   }
 
   /**

@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import org.opentripplanner.raptor.extensions.alternativepaths.records.PreprocessingOutput;
+import org.opentripplanner.raptor.extensions.alternativepaths.records.APOutput;
 import org.opentripplanner.raptor.extensions.alternativepaths.records.StopTransfer;
 import org.opentripplanner.raptor.path.LeximinMarker;
 import org.opentripplanner.raptor.spi.RaptorCostCalculator;
@@ -61,8 +62,8 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
     transfersFromStop = new HashMap<>();
   }
 
-  public void applyRoutes(
-    PreprocessingOutput<RaptorRoute<T>> routingInfo,
+  public void applyInfo(
+    APOutput<T> routingInfo,
     int earliest,
     int latest
   ) {
