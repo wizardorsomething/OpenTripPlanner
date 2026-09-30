@@ -73,9 +73,9 @@ public final class APRangeRaptorWorkerState<T extends RaptorTripSchedule>
   // null if early pruning is not used
   private final StdTransferEarlyPruning<T> earlyPruning;
 
-  private final HashMap<Integer, HashSet<Integer>> routesByStop;
+  private final HashMap<Integer, HashSet<T>> initialTripsByStop;
   private final HashMap<Integer, HashSet<Integer>> stopsReachingStop;
-  private final HashMap<Integer, HashSet<StopTransfer>> stopsReachingStopWalking;
+  private final HashMap<Integer, HashSet<StopTransfer>> transfersByStop;
   private final List<Integer> accessStops;
   private final List<Integer> egressStops;
   private int windowFactor = 2;
@@ -100,9 +100,9 @@ public final class APRangeRaptorWorkerState<T extends RaptorTripSchedule>
     this.arrivedAtDestinationCheck = arrivedAtDestinationCheck;
     this.earlyPruning = earlyPruning;
 
-    this.routesByStop = new HashMap<>();
+    this.initialTripsByStop = new HashMap<>();
     this.stopsReachingStop = new HashMap<>();
-    this.stopsReachingStopWalking = new HashMap<>();
+    this.transfersByStop = new HashMap<>();
     this.accessStops = accessStops;
     this.egressStops = egressStops;
   }
@@ -115,7 +115,7 @@ public final class APRangeRaptorWorkerState<T extends RaptorTripSchedule>
 
     if (printForTests) {
       System.out.println("stopsReachingStop: " + stopsReachingStop);
-      System.out.println("routesByStop: " + routesByStop);
+      System.out.println("initialTripsByStop: " + initialTripsByStop);
       System.out.println("accessStops: " + accessStops);
     }
 
@@ -139,18 +139,18 @@ public final class APRangeRaptorWorkerState<T extends RaptorTripSchedule>
     if (printForTests) {
       System.out.println("Stops: " + stops);
     }
-    HashMap<Integer, HashSet<Integer>> filteredRoutes = new HashMap<>();
+    HashMap<Integer, HashSet<T>> filteredTrips = new HashMap<>();
     HashMap<Integer, HashSet<StopTransfer>> filteredStopsReachingStopWalking = new HashMap<>();
     for (Integer id : stops) {
-      if (routesByStop.containsKey(id)) {
-        filteredRoutes.put(id, routesByStop.get(id));
+      if (initialTripsByStop.containsKey(id)) {
+        filteredTrips.put(id, initialTripsByStop.get(id));
       }
-      if (stopsReachingStopWalking.containsKey(id)) {
-        filteredStopsReachingStopWalking.put(id, stopsReachingStopWalking.get(id));
+      if (transfersByStop.containsKey(id)) {
+        filteredStopsReachingStopWalking.put(id, transfersByStop.get(id));
       }
     }
     if (printForTests) {
-      System.out.println("routesByStopFiltered: " + filteredRoutes);
+      System.out.println("tripsByStopFiltered: " + filteredTrips);
     }
     return new APOutput<>(
       filteredTrips,
@@ -254,9 +254,15 @@ public final class APRangeRaptorWorkerState<T extends RaptorTripSchedule>
     }
 
     if (withinSlack(stop, arrivalTime)) {
-      int fromStop = trip.pattern().stopIndex(boardStopPosition);
-      stopsReachingStop.computeIfAbsent(stop, _ -> new HashSet<>()).add(fromStop);
-      routesByStop.computeIfAbsent(stop, _ -> new HashSet<>()).add(trip.pattern().patternIndex());
+      int fromStopInPattern = boardStopPosition;
+      var pattern = trip.pattern();
+      int fromStop = pattern.stopIndex(boardStopPosition);
+      while (fromStop != stop) {
+        stopsReachingStop.computeIfAbsent(stop, _ -> new HashSet<>()).add(fromStop);
+        fromStopInPattern -= 1;
+        fromStop = pattern.stopIndex(fromStopInPattern);
+      }
+      initialTripsByStop.computeIfAbsent(stop, _ -> new HashSet<>()).add(trip);
     }
 
     if (newBestTransitArrivalTime(stop, arrivalTime)) {
@@ -300,7 +306,7 @@ public final class APRangeRaptorWorkerState<T extends RaptorTripSchedule>
     final int toStop = transfer.stop();
     if (withinSlack(toStop, arrivalTime)) {
       stopsReachingStop.computeIfAbsent(toStop, _ -> new HashSet<>()).add(fromStop);
-      stopsReachingStopWalking
+      transfersByStop
         .computeIfAbsent(toStop, _ -> new HashSet<>())
         .add(new StopTransfer(fromStop, transfer.durationInSeconds()));
     }

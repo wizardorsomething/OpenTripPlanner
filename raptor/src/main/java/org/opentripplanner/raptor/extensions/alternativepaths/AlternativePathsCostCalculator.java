@@ -12,7 +12,6 @@ import org.opentripplanner.raptor.extensions.alternativepaths.records.StopTimeEn
 import org.opentripplanner.raptor.extensions.alternativepaths.records.StopTransfer;
 import org.opentripplanner.raptor.path.LeximinMarker;
 import org.opentripplanner.raptor.spi.RaptorCostCalculator;
-import org.opentripplanner.raptor.spi.RaptorRoute;
 import org.opentripplanner.raptor.spi.RaptorTransferConstraint;
 import org.opentripplanner.raptor.spi.RaptorTransitDataProvider;
 import org.opentripplanner.raptor.spi.RaptorTripPattern;
@@ -53,23 +52,44 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
     int earliest,
     int latest
   ) {
-    var routesByStop = routingInfo.routesByStop();
+    var initialTripsByStop = routingInfo.initialTripsByStop();
     var resolver = transitData.stopNameResolver();
     this.latest = latest;
 
     egresses = routingInfo.egresses();
-    for (int stop : routesByStop.keySet()) {
+    for (var entry : initialTripsByStop.entrySet()) {
+      int stop = entry.getKey();
       tripsByStop.put(stop, new ArrayList<>());
-      for (RaptorRoute<T> route : routesByStop.get(stop)) {
-        var timetable = route.timetable();
-        var pattern = route.pattern();
-        int nTrips = timetable.numberOfTripSchedules();
+
+      var latestTrips = new HashMap<Integer, T>();
+      for (T trip : entry.getValue()) {
+        latestTrips.merge(
+          trip.pattern().patternIndex(),
+          trip,
+          (a, b) -> a.departure(0) >= b.departure(0) ? a : b
+        );
+      }
+
+      for (var patternEntry : latestTrips.entrySet()) {
+        T latestTrip = patternEntry.getValue();
+        var pattern = latestTrip.pattern();
+        var timetable = transitData.getRouteForIndex(patternEntry.getKey()).timetable();
+
         var idsInPattern = stopIndexToIdInPattern(stop, pattern);
-        for (int i = 0; i < nTrips; i++) {
-          T trip = timetable.getTripSchedule(i);
-          for (int idInPattern : idsInPattern) {
-            if (trip.arrival(idInPattern) >= earliest && trip.departure(idInPattern) <= latest) {
-              tripsByStop.get(stop).add(new StopTimeEntry<>(trip, trip.arrival(idInPattern), trip.departure(idInPattern)));
+        for (int idInPattern : idsInPattern) {
+          int latestDeparture = latestTrip.departure(idInPattern);
+          for (int i = 0; i < timetable.numberOfTripSchedules(); i++) {
+            T trip = timetable.getTripSchedule(i);
+            int arrival = trip.arrival(idInPattern);
+            int departure = trip.departure(idInPattern);
+            if (arrival >= earliest && departure <= latestDeparture) {
+              tripsByStop
+                .get(stop)
+                .add(
+                  new StopTimeEntry<>(trip, arrival, departure)
+                );
+            } else if (departure > latestDeparture){
+              break;
             }
           }
         }
