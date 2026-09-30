@@ -7,8 +7,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import org.opentripplanner.raptor.extensions.alternativepaths.records.PreprocessingOutput;
 import org.opentripplanner.raptor.extensions.alternativepaths.records.APOutput;
+import org.opentripplanner.raptor.extensions.alternativepaths.records.StopTimeEntry;
 import org.opentripplanner.raptor.extensions.alternativepaths.records.StopTransfer;
 import org.opentripplanner.raptor.path.LeximinMarker;
 import org.opentripplanner.raptor.spi.RaptorCostCalculator;
@@ -19,20 +19,6 @@ import org.opentripplanner.raptor.spi.RaptorTripPattern;
 import org.opentripplanner.raptor.spi.RaptorTripSchedule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-record StopTimeEntry<T extends RaptorTripSchedule>(T trip, int arrivalTime, int departureTime) {
-
-  public String toFormattedString() {
-    return "%s (%s)".formatted(trip.pattern().debugInfo(), formatSecondsAsTime(arrivalTime));
-  }
-
-  private static String formatSecondsAsTime(int secondsSinceMidnight) {
-    return "%02d:%02d".formatted(
-      secondsSinceMidnight / 3600,
-      (secondsSinceMidnight % 3600) / 60
-    );
-  }
-}
 
 /**
  * The responsibility for the cost calculator is to calculate the default multi-criteria cost.
