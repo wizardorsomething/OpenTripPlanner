@@ -218,8 +218,11 @@ public class PathBuilderLeg<T extends RaptorTripSchedule> {
     } else if (costCalculator instanceof LeximinMarker) {
       // I will leave this here so, should this function actually be used somewhere at some point, it will be correct
       // But it is not actually used anywhere important
-      if (isAccess() || isTransit()) {
-        return ((LeximinMarker) costCalculator).stopArrivalCost(toStop(), toTime);
+      if (isAccess()) {
+        return costCalculator.transitArrivalCost(0, 0, toTime, null, toStop());
+      }
+      if (isTransit()) {
+        return costCalculator.transitArrivalCost(0, 0, toTime, trip(), toStop());
       }
       if (isTransfer()) {
         return 0;
@@ -362,7 +365,7 @@ public class PathBuilderLeg<T extends RaptorTripSchedule> {
     PathLeg<T> nextLeg = next.createPathLeg(costCalculator, slackProvider);
     var accessPath = asAccessLeg().streetPath;
     if (costCalculator instanceof LeximinMarker) {
-      int cost = ((LeximinMarker) costCalculator).stopArrivalCost(accessPath.stop(), toTime);
+      int cost = costCalculator.transitArrivalCost(0, 0, toTime, null, accessPath.stop());
       return new AccessPathLeg<>(accessPath, fromTime, toTime, cost, nextLeg);
     }
     int cost = cost(costCalculator, accessPath);
@@ -582,7 +585,7 @@ public class PathBuilderLeg<T extends RaptorTripSchedule> {
     if (costCalculator == null) {
       return RaptorCostCalculator.ZERO_COST;
     } else if (costCalculator instanceof LeximinMarker) {
-      return ((LeximinMarker) costCalculator).stopArrivalCost(toStop(), toTime());
+      return costCalculator.transitArrivalCost(0, 0, toTime(), trip(), toStop());
     }
 
     var leg = asTransitLeg();

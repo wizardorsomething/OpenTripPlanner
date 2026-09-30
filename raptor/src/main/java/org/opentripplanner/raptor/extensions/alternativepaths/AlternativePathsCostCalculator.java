@@ -209,7 +209,25 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
     if (egresses.contains(toStopIndex)) {
       return maxAlternatives + 1;
     }
-    return stopArrivalCost(toStopIndex, arrivalTime);
+    if (tripsByStop.containsKey(toStopIndex)) {
+      var allTrips = alternativesAtStopArrival(toStopIndex, arrivalTime);
+      if (trip != null) {
+        allTrips.remove(trip);
+      }
+      int count = allTrips.size();
+      if (count > maxAlternatives) {
+        // System.out.println("Impossible alternative count: " + count);
+        LOG.warn(
+          "Impossible alternative count at {}: {}",
+          transitData.stopNameResolver().apply(toStopIndex),
+          count
+        );
+      }
+      return count;
+    } else {
+      // System.out.println("Unknown stop in calculator: " + stopIndex);
+      return 0;
+    }
   }
 
   private HashSet<T> alternativesAtStopArrival(int stopIndex, int arrivalTime) {
@@ -237,24 +255,6 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
       }
     }
     return countedTrips;
-  }
-
-  public int stopArrivalCost(int stopIndex, int arrivalTime) {
-    if (tripsByStop.containsKey(stopIndex)) {
-      int count = alternativesAtStopArrival(stopIndex, arrivalTime).size();
-      if (count > maxAlternatives) {
-        // System.out.println("Impossible alternative count: " + count);
-        LOG.warn(
-          "Impossible alternative count at {}: {}",
-          transitData.stopNameResolver().apply(stopIndex),
-          count
-        );
-      }
-      return count;
-    } else {
-      // System.out.println("Unknown stop in calculator: " + stopIndex);
-      return 0;
-    }
   }
 
   @Override
