@@ -12,5 +12,10 @@ of alternative paths available from each stop along a journey.
 - java -Xmx8G -jar otp-shaded/target/otp-shaded-2.10.0-SNAPSHOT.jar --load ./hsl
 - java -Dlogback.configurationFile=application/src/main/resources/logback.xml -Xmx8G -jar otp-shaded/target/otp-shaded-2.10.0-SNAPSHOT.jar --load ./hsl (for debugging)
 
+## Speed test
+- generate and copy fitting graph.obj into test/performance/helsinki
+- mvn install -DskipTests
+- mvn --projects application exec:java -Dexec.mainClass="org.opentripplanner.transit.speed_test.SpeedTest" -Dexec.classpathScope=test -Dexec.args="--dir=test/performance/helsinki -p ap -n 4 -i 3 -0"
+
 ## Digitransit-ui
 docker run -p 8080:8080 -it -e CONFIG=hsl -e OTP_URL=http://192.168.178.27:9080/otp/ -e MAP_URL=https://cdn.digitransit.fi -e NODE_OPTS=--max_old_space_size=1500 -e GEOCODING_BASE_URL=https://api.digitransit.fi/geocoding/v1 -e GEOCODING_API_SUBSCRIPTION_QUERY_PARAMETER_NAME=digitransit-subscription-key -e GEOCODING_API_SUBSCRIPTION_HEADER_NAME=digitransit-subscription-key -e GEOCODING_API_SUBSCRIPTION_TOKEN=63aa748c4b994123b62784d466fb3ae5 -e API_SUBSCRIPTION_QUERY_PARAMETER_NAME=digitransit-subscription-key -e API_SUBSCRIPTION_HEADER_NAME=digitransit-subscription-key -e API_SUBSCRIPTION_TOKEN=63aa748c4b994123b62784d466fb3ae5 hsldevcom/digitransit-ui:v3-prod

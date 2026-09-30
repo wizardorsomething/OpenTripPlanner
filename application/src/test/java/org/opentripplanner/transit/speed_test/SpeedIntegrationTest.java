@@ -7,6 +7,7 @@ import static org.opentripplanner.transit.speed_test.model.SpeedTestProfile.best
 import static org.opentripplanner.transit.speed_test.model.SpeedTestProfile.min_travel_duration;
 import static org.opentripplanner.transit.speed_test.model.SpeedTestProfile.min_travel_duration_reverse;
 import static org.opentripplanner.transit.speed_test.model.SpeedTestProfile.multi_criteria;
+import static org.opentripplanner.transit.speed_test.model.SpeedTestProfile.multi_criteria_ap;
 import static org.opentripplanner.transit.speed_test.model.SpeedTestProfile.multi_criteria_destination;
 import static org.opentripplanner.transit.speed_test.model.SpeedTestProfile.standard;
 import static org.opentripplanner.transit.speed_test.model.SpeedTestProfile.standard_reverse;
@@ -86,6 +87,11 @@ public class SpeedIntegrationTest {
   @Test
   void runMultiCriteriaWithDestinationPruning() {
     runProfile(multi_criteria_destination);
+  }
+
+  @Test
+  void runMultiCriteriaAp() {
+    runProfile(multi_criteria_ap);
   }
 
   private static void runProfile(SpeedTestProfile profile) {

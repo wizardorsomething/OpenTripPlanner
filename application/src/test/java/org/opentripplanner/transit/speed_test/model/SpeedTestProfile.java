@@ -56,6 +56,12 @@ public enum SpeedTestProfile {
     RaptorProfile.MULTI_CRITERIA,
     SearchDirection.FORWARD,
     Optimization.PARETO_CHECK_AGAINST_DESTINATION
+  ),
+  multi_criteria_ap(
+    "ap",
+    "Multi-Criteria Range Raptor with Alternative Paths criterion",
+    RaptorProfile.MULTI_CRITERIA_AP,
+    SearchDirection.FORWARD
   );
 
   final String shortName;

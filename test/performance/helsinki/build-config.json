@@ -7,8 +7,8 @@
   "maxAreaNodes": 1000,
   "maxTransferDuration": "26m",
   "multiThreadElevationCalculations": true,
-  "transitServiceStart": "2026-02-01",
-  "transitServiceEnd": "2026-02-28",
+  "transitServiceStart": "2026-08-01",
+  "transitServiceEnd": "2026-08-31",
   "transitModelTimeZone": "Europe/Helsinki",
   "fares": "hsl",
   "transferRequests": [
