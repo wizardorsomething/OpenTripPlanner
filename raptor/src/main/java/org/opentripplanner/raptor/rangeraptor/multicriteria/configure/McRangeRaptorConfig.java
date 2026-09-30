@@ -135,10 +135,15 @@ public class McRangeRaptorConfig<T extends RaptorTripSchedule> {
 
   private RoutingStrategy<T> createTransitWorkerStrategy(McRangeRaptorWorkerState<T> state) {
     return switch (resolveCostConfig()) {
-      case USE_C1, USE_C1_LEXIMIN -> createTransitWorkerStrategy(
+      case USE_C1 -> createTransitWorkerStrategy(
         state,
         PatternRideC1.factory(),
         PatternRideC1.paretoComparatorRelativeCost()
+      );
+      case USE_C1_LEXIMIN -> createTransitWorkerStrategy(
+        state,
+        PatternRideC1.factory(),
+        PatternRideC1.paretoComparatorRelativeCostAP()
       );
       case USE_C1_RELAXED_IF_C2_IS_OPTIMAL -> createTransitWorkerStrategy(
         state,
