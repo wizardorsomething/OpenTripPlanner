@@ -8,7 +8,7 @@ import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
 import org.opentripplanner.raptor.api.path.RaptorPath;
 import org.opentripplanner.raptor.api.view.ArrivalView;
 import org.opentripplanner.raptor.path.APMarker;
-import org.opentripplanner.raptor.path.LeximinPath;
+import org.opentripplanner.raptor.path.LeximaxPath;
 import org.opentripplanner.raptor.path.Path;
 import org.opentripplanner.raptor.rangeraptor.debug.DebugHandlerFactory;
 import org.opentripplanner.raptor.rangeraptor.internalapi.DebugHandler;
@@ -132,7 +132,7 @@ public class DestinationArrivalPaths<T extends RaptorTripSchedule> {
   ) {
     if (costCalculator instanceof APMarker) {
       return paths.qualify(
-        LeximinPath.dummyPath(
+        LeximaxPath.dummyPath(
           iterationDepartureTime,
           departureTime,
           arrivalTime,

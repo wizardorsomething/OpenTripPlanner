@@ -6,7 +6,7 @@ import static org.opentripplanner.raptor.api.path.RaptorPath.compareDepartureTim
 import static org.opentripplanner.raptor.api.path.RaptorPath.compareDurationInclusivePenalty;
 import static org.opentripplanner.raptor.api.path.RaptorPath.compareIterationDepartureTime;
 import static org.opentripplanner.raptor.api.path.RaptorPath.compareNumberOfTransfers;
-import static org.opentripplanner.raptor.path.LeximinPath.compareC1Path;
+import static org.opentripplanner.raptor.path.LeximaxPath.compareC1Path;
 
 import java.util.Objects;
 import org.opentripplanner.raptor.api.model.DominanceFunction;

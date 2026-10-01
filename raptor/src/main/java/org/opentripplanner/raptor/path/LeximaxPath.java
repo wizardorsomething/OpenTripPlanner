@@ -8,11 +8,11 @@ import org.opentripplanner.raptor.api.path.RaptorPath;
 import org.opentripplanner.raptor.spi.RaptorStopNameResolver;
 import org.opentripplanner.raptor.spi.RaptorTripSchedule;
 
-public class LeximinPath<T extends RaptorTripSchedule> extends Path<T> {
+public class LeximaxPath<T extends RaptorTripSchedule> extends Path<T> {
 
   private int[] c1Path;
 
-  private LeximinPath(
+  private LeximaxPath(
     int iterationDepartureTime,
     int startTime,
     int endTime,
@@ -25,12 +25,12 @@ public class LeximinPath<T extends RaptorTripSchedule> extends Path<T> {
     c1Path[0] = c1;
   }
 
-  public LeximinPath(int iterationDepartureTime, AccessPathLeg<T> accessLeg, int c1) {
+  public LeximaxPath(int iterationDepartureTime, AccessPathLeg<T> accessLeg, int c1) {
     super(iterationDepartureTime, accessLeg, c1);
     setC1Path(accessLeg);
   }
 
-  public LeximinPath(int iterationDepartureTime, AccessPathLeg<T> accessLeg, int c1, int c2) {
+  public LeximaxPath(int iterationDepartureTime, AccessPathLeg<T> accessLeg, int c1, int c2) {
     super(iterationDepartureTime, accessLeg, c1, c2);
     setC1Path(accessLeg);
   }
@@ -65,7 +65,7 @@ public class LeximinPath<T extends RaptorTripSchedule> extends Path<T> {
     int cost,
     int c2
   ) {
-    return new LeximinPath<>(iteration, startTime, endTime, numberOfTransfers, cost, c2);
+    return new LeximaxPath<>(iteration, startTime, endTime, numberOfTransfers, cost, c2);
   }
 
   @Override
@@ -95,9 +95,9 @@ public class LeximinPath<T extends RaptorTripSchedule> extends Path<T> {
     RaptorPath<T> l,
     RaptorPath<T> r
   ) {
-    int[] sortedL = ((LeximinPath<T>) l).getC1Path().clone();
+    int[] sortedL = ((LeximaxPath<T>) l).getC1Path().clone();
     Arrays.sort(sortedL);
-    int[] sortedR = ((LeximinPath<T>) r).getC1Path().clone();
+    int[] sortedR = ((LeximaxPath<T>) r).getC1Path().clone();
     Arrays.sort(sortedR);
     return leximinComparison(sortedL, sortedR);
   }
