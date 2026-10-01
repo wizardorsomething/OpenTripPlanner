@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 import org.opentripplanner.raptor.extensions.alternativepaths.records.APOutput;
 import org.opentripplanner.raptor.extensions.alternativepaths.records.StopTimeEntry;
 import org.opentripplanner.raptor.extensions.alternativepaths.records.StopTransfer;
-import org.opentripplanner.raptor.path.LeximinMarker;
+import org.opentripplanner.raptor.path.APMarker;
 import org.opentripplanner.raptor.spi.RaptorCostCalculator;
 import org.opentripplanner.raptor.spi.RaptorTransferConstraint;
 import org.opentripplanner.raptor.spi.RaptorTransitDataProvider;
@@ -25,7 +25,7 @@ import org.slf4j.LoggerFactory;
  * This class is immutable and thread safe.
  */
 public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
-  implements RaptorCostCalculator<T>, LeximinMarker {
+  implements RaptorCostCalculator<T>, APMarker {
 
   private static final Logger LOG = LoggerFactory.getLogger(AlternativePathsCostCalculator.class);
 

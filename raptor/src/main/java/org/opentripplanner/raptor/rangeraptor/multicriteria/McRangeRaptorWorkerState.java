@@ -11,7 +11,7 @@ import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
 import org.opentripplanner.raptor.api.model.RaptorStartOnBoardAccess;
 import org.opentripplanner.raptor.api.model.RaptorTripScheduleStopPosition;
 import org.opentripplanner.raptor.api.view.ArrivalView;
-import org.opentripplanner.raptor.path.LeximinMarker;
+import org.opentripplanner.raptor.path.APMarker;
 import org.opentripplanner.raptor.rangeraptor.internalapi.OnTripAccessArrivals;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RaptorRouterResult;
 import org.opentripplanner.raptor.rangeraptor.internalapi.RaptorWorkerState;
@@ -129,7 +129,7 @@ public final class McRangeRaptorWorkerState<T extends RaptorTripSchedule>
   }
 
   public void addAccessToStop(RaptorAccessEgress accessPath, int departureTime) {
-    if (calculatorGeneralizedCost instanceof LeximinMarker) {
+    if (calculatorGeneralizedCost instanceof APMarker) {
       var cost = calculatorGeneralizedCost.transitArrivalCost(
         0, 0,
         departureTime + accessPath.durationInSeconds(),
@@ -329,7 +329,7 @@ public final class McRangeRaptorWorkerState<T extends RaptorTripSchedule>
     int alightTime,
     int alightSlack
   ) {
-    if (calculatorGeneralizedCost instanceof LeximinMarker) {
+    if (calculatorGeneralizedCost instanceof APMarker) {
       return calculatorGeneralizedCost.transitArrivalCost(
         ride.boardC1(),
         alightSlack,

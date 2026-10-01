@@ -7,7 +7,7 @@ import javax.annotation.Nullable;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
 import org.opentripplanner.raptor.api.path.RaptorPath;
 import org.opentripplanner.raptor.api.view.ArrivalView;
-import org.opentripplanner.raptor.path.LeximinMarker;
+import org.opentripplanner.raptor.path.APMarker;
 import org.opentripplanner.raptor.path.LeximinPath;
 import org.opentripplanner.raptor.path.Path;
 import org.opentripplanner.raptor.rangeraptor.debug.DebugHandlerFactory;
@@ -130,7 +130,7 @@ public class DestinationArrivalPaths<T extends RaptorTripSchedule> {
     int cost,
     int c2
   ) {
-    if (costCalculator instanceof LeximinMarker) {
+    if (costCalculator instanceof APMarker) {
       return paths.qualify(
         LeximinPath.dummyPath(
           iterationDepartureTime,
@@ -244,7 +244,7 @@ public class DestinationArrivalPaths<T extends RaptorTripSchedule> {
     DestinationArrival<T> destArrival,
     RaptorPath<T> path
   ) {
-    if (!(costCalculator instanceof LeximinMarker) && path.c1() != destArrival.c1()) {
+    if (!(costCalculator instanceof APMarker) && path.c1() != destArrival.c1()) {
       THROTTLE_MISS_MATCH.throttle(() ->
         LOG.warn(
           "Cost mismatch - Mapper: {}, stop-arrivals: {}, path: {}  {}",
