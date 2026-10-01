@@ -8,7 +8,7 @@ import org.opentripplanner.raptor.spi.RaptorTripSchedule;
 /**
  * This class is responsible for creating StopArrivals which support accumulated criteria ONE.
  */
-public class StopArrivalFactoryLeximin<T extends RaptorTripSchedule>
+public class StopArrivalFactoryLeximax<T extends RaptorTripSchedule>
   implements McStopArrivalFactory<T> {
 
   @Override
@@ -16,7 +16,7 @@ public class StopArrivalFactoryLeximin<T extends RaptorTripSchedule>
     int departureTime,
     RaptorAccessEgress accessPath
   ) {
-    return new AccessStopArrivalLeximin<>(departureTime, accessPath);
+    return new AccessStopArrivalLeximax<>(departureTime, accessPath);
   }
 
   public McStopArrival<T> createAccessStopArrival(
@@ -24,7 +24,7 @@ public class StopArrivalFactoryLeximin<T extends RaptorTripSchedule>
     RaptorAccessEgress accessPath,
     int cost
   ) {
-    return new AccessStopArrivalLeximin<>(departureTime, accessPath, cost);
+    return new AccessStopArrivalLeximax<>(departureTime, accessPath, cost);
   }
 
   @Override
@@ -34,8 +34,8 @@ public class StopArrivalFactoryLeximin<T extends RaptorTripSchedule>
     int stopArrivalTime,
     int c1
   ) {
-    return new TransitStopArrivalLeximin<>(
-      (LeximinMcStopArrival<T>) ride.prevArrival(),
+    return new TransitStopArrivalLeximax<>(
+      (LeximaxMcStopArrival<T>) ride.prevArrival(),
       alightStop,
       stopArrivalTime,
       c1,
@@ -50,8 +50,8 @@ public class StopArrivalFactoryLeximin<T extends RaptorTripSchedule>
     RaptorTransfer transfer,
     int arrivalTime
   ) {
-    return new TransferStopArrivalLeximin<>(
-      (LeximinMcStopArrival<T>) previous,
+    return new TransferStopArrivalLeximax<>(
+      (LeximaxMcStopArrival<T>) previous,
       transfer,
       arrivalTime
     );

@@ -11,13 +11,13 @@ import org.opentripplanner.utils.time.TimeUtils;
  *
  * @param <T> The TripSchedule type defined by the user of the raptor API.
  */
-public abstract sealed class LeximinMcStopArrival<T extends RaptorTripSchedule>
+public abstract sealed class LeximaxMcStopArrival<T extends RaptorTripSchedule>
   extends McStopArrival<T>
   permits
-    AbstractStopArrivalC2Leximin,
-    AccessStopArrivalLeximin,
-    TransferStopArrivalLeximin,
-    TransitStopArrivalLeximin {
+  AbstractStopArrivalC2Leximax,
+  AccessStopArrivalLeximax,
+  TransferStopArrivalLeximax,
+  TransitStopArrivalLeximax {
 
   // collection of costs
   private int[] c1Path;
@@ -31,8 +31,8 @@ public abstract sealed class LeximinMcStopArrival<T extends RaptorTripSchedule>
    * @param arrivalTime  the arrival time for this stop index
    * @param c1           the accumulated criteria-one(cost) at this stop arrival
    */
-  protected LeximinMcStopArrival(
-    LeximinMcStopArrival<T> previous,
+  protected LeximaxMcStopArrival(
+    LeximaxMcStopArrival<T> previous,
     int round,
     int stop,
     int arrivalTime,
@@ -45,7 +45,7 @@ public abstract sealed class LeximinMcStopArrival<T extends RaptorTripSchedule>
   /**
    * Initial state - first stop visited during the RAPTOR algorithm.
    */
-  protected LeximinMcStopArrival(
+  protected LeximaxMcStopArrival(
     int stop,
     int departureTime,
     int travelDuration,
@@ -70,7 +70,7 @@ public abstract sealed class LeximinMcStopArrival<T extends RaptorTripSchedule>
    * Add the given amount of slack to the arrival-time. This is used to add extraordinary
    * wait-time to an arrival - for example, in via-search where a minimum-wait-time can be set.
    */
-  public abstract LeximinMcStopArrival<T> addSlackToArrivalTime(int slack);
+  public abstract LeximaxMcStopArrival<T> addSlackToArrivalTime(int slack);
 
   @Override
   public String toString() {

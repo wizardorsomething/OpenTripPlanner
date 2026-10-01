@@ -10,15 +10,15 @@ import org.opentripplanner.raptor.spi.RaptorTripSchedule;
 /**
  * @param <T> The TripSchedule type defined by the user of the raptor API.
  */
-final class TransitStopArrivalC2Leximin<T extends RaptorTripSchedule>
-  extends AbstractStopArrivalC2Leximin<T>
+final class TransitStopArrivalC2Leximax<T extends RaptorTripSchedule>
+  extends AbstractStopArrivalC2Leximax<T>
   implements TransitPathView<T>, TransitArrival<T> {
 
   private final T trip;
   private final int boardStopPosition;
 
-  TransitStopArrivalC2Leximin(
-    LeximinMcStopArrival<T> previous,
+  TransitStopArrivalC2Leximax(
+    LeximaxMcStopArrival<T> previous,
     int stopIndex,
     int arrivalTime,
     int c1,
@@ -62,9 +62,9 @@ final class TransitStopArrivalC2Leximin<T extends RaptorTripSchedule>
   }
 
   @Override
-  public LeximinMcStopArrival<T> addSlackToArrivalTime(int slack) {
-    return new TransitStopArrivalC2Leximin<>(
-      (LeximinMcStopArrival<T>) previous(),
+  public LeximaxMcStopArrival<T> addSlackToArrivalTime(int slack) {
+    return new TransitStopArrivalC2Leximax<>(
+      (LeximaxMcStopArrival<T>) previous(),
       stop(),
       arrivalTime() + slack,
       c1(),

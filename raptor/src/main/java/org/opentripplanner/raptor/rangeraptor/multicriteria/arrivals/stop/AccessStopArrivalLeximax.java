@@ -14,12 +14,12 @@ import org.opentripplanner.raptor.spi.RaptorTripSchedule;
  *
  * @param <T> The TripSchedule type defined by the user of the raptor API.
  */
-final class AccessStopArrivalLeximin<T extends RaptorTripSchedule> extends LeximinMcStopArrival<T> {
+final class AccessStopArrivalLeximax<T extends RaptorTripSchedule> extends LeximaxMcStopArrival<T> {
 
   private final int departureTime;
   private final RaptorAccessEgress access;
 
-  AccessStopArrivalLeximin(int departureTime, RaptorAccessEgress access) {
+  AccessStopArrivalLeximax(int departureTime, RaptorAccessEgress access) {
     super(
       access.stop(),
       departureTime,
@@ -31,7 +31,7 @@ final class AccessStopArrivalLeximin<T extends RaptorTripSchedule> extends Lexim
     this.access = access;
   }
 
-  AccessStopArrivalLeximin(int departureTime, RaptorAccessEgress access, int cost) {
+  AccessStopArrivalLeximax(int departureTime, RaptorAccessEgress access, int cost) {
     super(access.stop(), departureTime, access.durationInSeconds(), cost, access.numberOfRides());
     this.departureTime = departureTime;
     this.access = access;
@@ -58,7 +58,7 @@ final class AccessStopArrivalLeximin<T extends RaptorTripSchedule> extends Lexim
   }
 
   @Override
-  public LeximinMcStopArrival<T> timeShiftNewArrivalTime(int newRequestedArrivalTime) {
+  public LeximaxMcStopArrival<T> timeShiftNewArrivalTime(int newRequestedArrivalTime) {
     int newArrivalTime = access.latestArrivalTime(newRequestedArrivalTime);
 
     if (newArrivalTime == RaptorConstants.TIME_NOT_SET) {
@@ -71,11 +71,11 @@ final class AccessStopArrivalLeximin<T extends RaptorTripSchedule> extends Lexim
     }
     int newDepartureTime = newArrivalTime - access.durationInSeconds();
 
-    return new AccessStopArrivalLeximin<>(newDepartureTime, access);
+    return new AccessStopArrivalLeximax<>(newDepartureTime, access);
   }
 
   @Override
-  public LeximinMcStopArrival<T> addSlackToArrivalTime(int slack) {
-    return new AccessStopArrivalLeximin<>(departureTime, accessEgressWithExtraSlack(access, slack));
+  public LeximaxMcStopArrival<T> addSlackToArrivalTime(int slack) {
+    return new AccessStopArrivalLeximax<>(departureTime, accessEgressWithExtraSlack(access, slack));
   }
 }

@@ -2,12 +2,12 @@ package org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop;
 
 import org.opentripplanner.raptor.spi.RaptorTripSchedule;
 
-public final class LeximinComparators {
+public final class LeximaxComparators {
 
   public static <T extends RaptorTripSchedule> ArrivalParetoSetComparatorFactory<
     McStopArrival<T>
   > ofCompareC1() {
-    return new ArrivalParetoSetComparatorFactory<>(LeximinComparators::compareC1);
+    return new ArrivalParetoSetComparatorFactory<>(LeximaxComparators::compareC1);
   }
 
   private static boolean leximinComparison(int[] pathL, int[] pathR) {
@@ -25,8 +25,8 @@ public final class LeximinComparators {
   }
 
   private static <T extends McStopArrival<?>> boolean compareC1(T l, T r) {
-    LeximinMcStopArrival<?> ll = (LeximinMcStopArrival<?>) l;
-    LeximinMcStopArrival<?> rr = (LeximinMcStopArrival<?>) r;
+    LeximaxMcStopArrival<?> ll = (LeximaxMcStopArrival<?>) l;
+    LeximaxMcStopArrival<?> rr = (LeximaxMcStopArrival<?>) r;
     return (
       l.arrivalTime() < r.arrivalTime() ||
       l.round() < r.round() ||

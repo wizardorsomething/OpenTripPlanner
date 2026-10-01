@@ -21,12 +21,12 @@ import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.McArrivalsE
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.McStopArrivals;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.StopsWithArriveByTransitCriteriaResolver;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.ArrivalParetoSetComparatorFactory;
-import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.LeximinComparators;
+import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.LeximaxComparators;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.McStopArrival;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.McStopArrivalFactory;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.StopArrivalFactoryC1;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.StopArrivalFactoryC2;
-import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.StopArrivalFactoryLeximin;
+import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.StopArrivalFactoryLeximax;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.heuristic.HeuristicsProvider;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.ride.AbstractPatternRide;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.ride.PatternRideC1;
@@ -187,7 +187,7 @@ public class McRangeRaptorConfig<T extends RaptorTripSchedule> {
   private McStopArrivalFactory<T> createStopArrivalFactory() {
     if (stopArrivalFactory == null) {
       if (context().profile() == RaptorProfile.MULTI_CRITERIA_AP) {
-        this.stopArrivalFactory = new StopArrivalFactoryLeximin<>();
+        this.stopArrivalFactory = new StopArrivalFactoryLeximax<>();
       } else {
         this.stopArrivalFactory = isTransitPriority()
           ? new StopArrivalFactoryC2<>()
@@ -231,7 +231,7 @@ public class McRangeRaptorConfig<T extends RaptorTripSchedule> {
   private ArrivalParetoSetComparatorFactory<McStopArrival<T>> createFactoryParetoComparator() {
     return switch (resolveCostConfig()) {
       case USE_C1 -> ArrivalParetoSetComparatorFactory.ofCompareC1();
-      case USE_C1_LEXIMIN -> LeximinComparators.ofCompareC1();
+      case USE_C1_LEXIMIN -> LeximaxComparators.ofCompareC1();
       case USE_C1_RELAXED_IF_C2_IS_OPTIMAL -> ArrivalParetoSetComparatorFactory.ofCompareC1RelaxedOnC2Dominance(
         mcRequest().relaxC1(),
         dominanceFunctionC2()

@@ -19,7 +19,7 @@ import org.opentripplanner.raptor.rangeraptor.internalapi.WorkerLifeCycle;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.McStopArrivals;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.McStopArrival;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.McStopArrivalFactory;
-import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.StopArrivalFactoryLeximin;
+import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.StopArrivalFactoryLeximax;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.heuristic.HeuristicsProvider;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.ride.AbstractPatternRide;
 import org.opentripplanner.raptor.rangeraptor.path.DestinationArrivalPaths;
@@ -137,7 +137,7 @@ public final class McRangeRaptorWorkerState<T extends RaptorTripSchedule>
         accessPath.stop()
       );
       addStopArrival(
-        ((StopArrivalFactoryLeximin<T>) stopArrivalFactory).createAccessStopArrival(
+        ((StopArrivalFactoryLeximax<T>) stopArrivalFactory).createAccessStopArrival(
           departureTime,
           accessPath,
           cost

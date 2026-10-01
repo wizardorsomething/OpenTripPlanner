@@ -15,13 +15,13 @@ import org.opentripplanner.raptor.spi.RaptorTripSchedule;
  *
  * @param <T> The TripSchedule type defined by the user of the raptor API.
  */
-final class AccessStopArrivalC2Leximin<T extends RaptorTripSchedule>
-  extends AbstractStopArrivalC2Leximin<T> {
+final class AccessStopArrivalC2Leximax<T extends RaptorTripSchedule>
+  extends AbstractStopArrivalC2Leximax<T> {
 
   private final int departureTime;
   private final RaptorAccessEgress access;
 
-  AccessStopArrivalC2Leximin(int departureTime, RaptorAccessEgress access) {
+  AccessStopArrivalC2Leximax(int departureTime, RaptorAccessEgress access) {
     super(
       access.stop(),
       departureTime,
@@ -45,7 +45,7 @@ final class AccessStopArrivalC2Leximin<T extends RaptorTripSchedule>
   }
 
   @Override
-  public AbstractStopArrivalC2Leximin<T> timeShiftNewArrivalTime(int newRequestedArrivalTime) {
+  public AbstractStopArrivalC2Leximax<T> timeShiftNewArrivalTime(int newRequestedArrivalTime) {
     int newArrivalTime = access.latestArrivalTime(newRequestedArrivalTime);
 
     if (newArrivalTime == RaptorConstants.TIME_NOT_SET) {
@@ -58,12 +58,12 @@ final class AccessStopArrivalC2Leximin<T extends RaptorTripSchedule>
     }
     int newDepartureTime = newArrivalTime - access.durationInSeconds();
 
-    return new AccessStopArrivalC2Leximin<>(newDepartureTime, access);
+    return new AccessStopArrivalC2Leximax<>(newDepartureTime, access);
   }
 
   @Override
-  public LeximinMcStopArrival<T> addSlackToArrivalTime(int slack) {
-    return new AccessStopArrivalC2Leximin<>(
+  public LeximaxMcStopArrival<T> addSlackToArrivalTime(int slack) {
+    return new AccessStopArrivalC2Leximax<>(
       departureTime,
       accessEgressWithExtraSlack(access, slack)
     );

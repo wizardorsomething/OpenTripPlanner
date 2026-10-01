@@ -7,9 +7,9 @@ import org.opentripplanner.raptor.spi.RaptorTripSchedule;
  *
  * @param <T> The TripSchedule type defined by the user of the raptor API.
  */
-abstract sealed class AbstractStopArrivalC2Leximin<T extends RaptorTripSchedule>
-  extends LeximinMcStopArrival<T>
-  permits AccessStopArrivalC2Leximin, TransitStopArrivalC2Leximin, TransferStopArrivalC2Leximin {
+abstract sealed class AbstractStopArrivalC2Leximax<T extends RaptorTripSchedule>
+  extends LeximaxMcStopArrival<T>
+  permits AccessStopArrivalC2Leximax, TransitStopArrivalC2Leximax, TransferStopArrivalC2Leximax {
 
   private final int c2;
 
@@ -23,8 +23,8 @@ abstract sealed class AbstractStopArrivalC2Leximin<T extends RaptorTripSchedule>
    * @param c1                   first criteria, the total accumulated generalized-cost-1 criteria
    * @param c2                   second criteria, the total accumulated generalized-cost-2 criteria
    */
-  AbstractStopArrivalC2Leximin(
-    LeximinMcStopArrival<T> previous,
+  AbstractStopArrivalC2Leximax(
+    LeximaxMcStopArrival<T> previous,
     int round,
     int stop,
     int arrivalTime,
@@ -38,7 +38,7 @@ abstract sealed class AbstractStopArrivalC2Leximin<T extends RaptorTripSchedule>
   /**
    * Initial state - first stop visited during the RAPTOR algorithm.
    */
-  AbstractStopArrivalC2Leximin(
+  AbstractStopArrivalC2Leximax(
     int stop,
     int departureTime,
     int travelDuration,
