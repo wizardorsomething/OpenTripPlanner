@@ -7,5 +7,4 @@ public record APOutput<T>(
   HashMap<Integer, HashSet<T>> initialTripsByStop,
   HashMap<Integer, HashSet<StopTransfer>> transferOptions,
   HashSet<Integer> egresses
-) {
-}
+) {}

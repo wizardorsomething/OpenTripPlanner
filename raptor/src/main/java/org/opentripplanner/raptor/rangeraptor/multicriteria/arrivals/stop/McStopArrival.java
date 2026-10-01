@@ -11,7 +11,7 @@ import org.opentripplanner.raptor.spi.RaptorTripSchedule;
 public abstract sealed class McStopArrival<T extends RaptorTripSchedule>
   implements ArrivalView<T>
   permits
-  LeximaxMcStopArrival,
+    LeximaxMcStopArrival,
     AbstractStopArrivalC2,
     AccessStopArrival,
     TransferStopArrival,

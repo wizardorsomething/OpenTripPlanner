@@ -57,7 +57,7 @@ public final class PatternRideC1<T extends RaptorTripSchedule> extends AbstractP
 
   public static <T extends RaptorTripSchedule> ParetoComparator<
     PatternRideC1<T>
-    > paretoComparatorRelativeCostAP() {
+  > paretoComparatorRelativeCostAP() {
     return (l, r) -> l.compareArrivalTime(r) || r.compareC1(l);
   }
 

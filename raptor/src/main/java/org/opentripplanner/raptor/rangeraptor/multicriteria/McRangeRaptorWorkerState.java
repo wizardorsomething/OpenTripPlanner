@@ -131,7 +131,8 @@ public final class McRangeRaptorWorkerState<T extends RaptorTripSchedule>
   public void addAccessToStop(RaptorAccessEgress accessPath, int departureTime) {
     if (calculatorGeneralizedCost instanceof APMarker) {
       var cost = calculatorGeneralizedCost.transitArrivalCost(
-        0, 0,
+        0,
+        0,
         departureTime + accessPath.durationInSeconds(),
         null,
         accessPath.stop()

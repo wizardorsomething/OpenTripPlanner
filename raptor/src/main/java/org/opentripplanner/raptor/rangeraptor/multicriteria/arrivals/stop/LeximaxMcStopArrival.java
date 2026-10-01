@@ -14,10 +14,10 @@ import org.opentripplanner.utils.time.TimeUtils;
 public abstract sealed class LeximaxMcStopArrival<T extends RaptorTripSchedule>
   extends McStopArrival<T>
   permits
-  AbstractStopArrivalC2Leximax,
-  AccessStopArrivalLeximax,
-  TransferStopArrivalLeximax,
-  TransitStopArrivalLeximax {
+    AbstractStopArrivalC2Leximax,
+    AccessStopArrivalLeximax,
+    TransferStopArrivalLeximax,
+    TransitStopArrivalLeximax {
 
   // collection of costs
   private int[] c1Path;
