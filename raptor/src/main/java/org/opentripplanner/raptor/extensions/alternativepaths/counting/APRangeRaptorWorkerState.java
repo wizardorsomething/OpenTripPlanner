@@ -253,17 +253,15 @@ public final class APRangeRaptorWorkerState<T extends RaptorTripSchedule>
       return;
     }
 
-    if (withinSlack(stop, arrivalTime)) {
-      int fromStopInPattern = boardStopPosition;
-      var pattern = trip.pattern();
-      int fromStop = pattern.stopIndex(boardStopPosition);
-      while (fromStop != stop) {
-        stopsReachingStop.computeIfAbsent(stop, _ -> new HashSet<>()).add(fromStop);
-        fromStopInPattern -= 1;
-        fromStop = pattern.stopIndex(fromStopInPattern);
-      }
-      initialTripsByStop.computeIfAbsent(stop, _ -> new HashSet<>()).add(trip);
+    int fromStopInPattern = boardStopPosition;
+    var pattern = trip.pattern();
+    int fromStop = pattern.stopIndex(boardStopPosition);
+    while (fromStop != stop) {
+      stopsReachingStop.computeIfAbsent(stop, _ -> new HashSet<>()).add(fromStop);
+      fromStopInPattern -= 1;
+      fromStop = pattern.stopIndex(fromStopInPattern);
     }
+    initialTripsByStop.computeIfAbsent(stop, _ -> new HashSet<>()).add(trip);
 
     if (newBestTransitArrivalTime(stop, arrivalTime)) {
       // transitTimes upper bounds bestTimes
@@ -304,12 +302,10 @@ public final class APRangeRaptorWorkerState<T extends RaptorTripSchedule>
     }
 
     final int toStop = transfer.stop();
-    if (withinSlack(toStop, arrivalTime)) {
-      stopsReachingStop.computeIfAbsent(toStop, _ -> new HashSet<>()).add(fromStop);
-      transfersByStop
-        .computeIfAbsent(toStop, _ -> new HashSet<>())
-        .add(new StopTransfer(fromStop, transfer.durationInSeconds()));
-    }
+    stopsReachingStop.computeIfAbsent(toStop, _ -> new HashSet<>()).add(fromStop);
+    transfersByStop
+      .computeIfAbsent(toStop, _ -> new HashSet<>())
+      .add(new StopTransfer(fromStop, transfer.durationInSeconds()));
 
     if (newOverallBestTime(toStop, arrivalTime)) {
       stopArrivalsState.setNewBestTransferTime(fromStop, arrivalTime, transfer);
