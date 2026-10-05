@@ -69,6 +69,9 @@ public final class AccessEgressFunctions {
   private static final ParetoComparator<RaptorAccessEgress> MC_COMPARATOR = (l, r) ->
     STANDARD_COMPARATOR.leftDominanceExist(l, r) || l.c1() < r.c1();
 
+  private static final ParetoComparator<RaptorAccessEgress> MC_COMPARATOR_LEXIMAX = (l, r) ->
+    STANDARD_COMPARATOR.leftDominanceExist(l, r) || l.c1() > r.c1();
+
   /** private constructor to prevent instantiation of utils class. */
   private AccessEgressFunctions() {}
 
@@ -91,6 +94,27 @@ public final class AccessEgressFunctions {
     Collection<RaptorAccessEgress> paths
   ) {
     var result = removeNonOptimalPaths(paths, MC_COMPARATOR);
+    if (LOG.isDebugEnabled() && result.size() < paths.size()) {
+      var duplicates = new ArrayList<>(paths);
+      duplicates.removeAll(result);
+      // Note! This does not provide enough information to solve/debug this problem, but this is
+      // not a problem in Raptor, so we do not want to add more specific logging here - this does
+      // however document that the problem exist. Turn on debug logging and move the start/end
+      // coordinate around until you see this message.
+      //
+      // See https://github.com/opentripplanner/OpenTripPlanner/issues/5601
+      LOG.warn(
+        "Duplicate access/egress paths passed into raptor:\n\t" +
+          duplicates.stream().map(Objects::toString).collect(Collectors.joining("\n\t"))
+      );
+    }
+    return result;
+  }
+
+  static Collection<RaptorAccessEgress> removeNonOptimalPathsForMcRaptorLeximax(
+    Collection<RaptorAccessEgress> paths
+  ) {
+    var result = removeNonOptimalPaths(paths, MC_COMPARATOR_LEXIMAX);
     if (LOG.isDebugEnabled() && result.size() < paths.size()) {
       var duplicates = new ArrayList<>(paths);
       duplicates.removeAll(result);

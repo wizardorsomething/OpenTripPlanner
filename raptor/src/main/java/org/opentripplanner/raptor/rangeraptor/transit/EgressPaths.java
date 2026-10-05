@@ -4,6 +4,7 @@ import static org.opentripplanner.raptor.api.request.RaptorProfile.MULTI_CRITERI
 import static org.opentripplanner.raptor.api.request.RaptorProfile.MULTI_CRITERIA_AP;
 import static org.opentripplanner.raptor.rangeraptor.transit.AccessEgressFunctions.groupByStop;
 import static org.opentripplanner.raptor.rangeraptor.transit.AccessEgressFunctions.removeNonOptimalPathsForMcRaptor;
+import static org.opentripplanner.raptor.rangeraptor.transit.AccessEgressFunctions.removeNonOptimalPathsForMcRaptorLeximax;
 import static org.opentripplanner.raptor.rangeraptor.transit.AccessEgressFunctions.removeNonOptimalPathsForStandardRaptor;
 
 import gnu.trove.map.TIntObjectMap;
@@ -35,8 +36,10 @@ public class EgressPaths {
   public static EgressPaths create(Collection<RaptorAccessEgress> paths, RaptorProfile profile) {
     paths = decorateWithTimePenaltyLogic(paths);
 
-    if (MULTI_CRITERIA.is(profile) || MULTI_CRITERIA_AP.is(profile)) {
+    if (MULTI_CRITERIA.is(profile)) {
       paths = removeNonOptimalPathsForMcRaptor(paths);
+    } else if (MULTI_CRITERIA_AP.is(profile)) {
+      paths = removeNonOptimalPathsForMcRaptorLeximax(paths);
     } else {
       paths = removeNonOptimalPathsForStandardRaptor(paths);
     }

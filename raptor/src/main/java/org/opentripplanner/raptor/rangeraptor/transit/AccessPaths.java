@@ -2,6 +2,7 @@ package org.opentripplanner.raptor.rangeraptor.transit;
 
 import static org.opentripplanner.raptor.rangeraptor.transit.AccessEgressFunctions.groupByRound;
 import static org.opentripplanner.raptor.rangeraptor.transit.AccessEgressFunctions.removeNonOptimalPathsForMcRaptor;
+import static org.opentripplanner.raptor.rangeraptor.transit.AccessEgressFunctions.removeNonOptimalPathsForMcRaptorLeximax;
 import static org.opentripplanner.raptor.rangeraptor.transit.AccessEgressFunctions.removeNonOptimalPathsForStandardRaptor;
 
 import gnu.trove.map.TIntObjectMap;
@@ -78,8 +79,10 @@ public class AccessPaths {
 
     paths = split.get(false);
 
-    if (profile.isOneOf(RaptorProfile.MULTI_CRITERIA, RaptorProfile.MULTI_CRITERIA_AP)) {
+    if (profile.is(RaptorProfile.MULTI_CRITERIA)) {
       paths = removeNonOptimalPathsForMcRaptor(paths);
+    } else if (profile.is(RaptorProfile.MULTI_CRITERIA_AP)) {
+      paths = removeNonOptimalPathsForMcRaptorLeximax(paths);
     } else {
       paths = removeNonOptimalPathsForStandardRaptor(paths);
     }
