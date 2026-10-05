@@ -256,7 +256,7 @@ public class APConfig<T extends RaptorTripSchedule> {
       ctx.slackProvider().transferSlack(),
       egressPaths(),
       MIN_TRAVEL_DURATION.is(ctx.profile()),
-      paretoComparator(ctx.paretoSetTimeConfig(), ParetoSetCost.USE_C1_LEXIMIN, null, null),
+      paretoComparator(ctx.paretoSetTimeConfig(), ParetoSetCost.USE_C1_LEXIMAX, null, null),
       ctx.lifeCycle()
     );
   }

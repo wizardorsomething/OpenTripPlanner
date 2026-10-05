@@ -10,7 +10,7 @@ public final class LeximaxComparators {
     return new ArrivalParetoSetComparatorFactory<>(LeximaxComparators::compareC1);
   }
 
-  private static boolean leximinComparison(int[] pathL, int[] pathR) {
+  private static boolean leximaxComparison(int[] pathL, int[] pathR) {
     int lenL = pathL.length;
     int lenR = pathR.length;
     int minLen = Math.min(lenL, lenR);
@@ -30,7 +30,7 @@ public final class LeximaxComparators {
     return (
       l.arrivalTime() < r.arrivalTime() ||
       l.round() < r.round() ||
-      leximinComparison(ll.c1Path(), rr.c1Path())
+      leximaxComparison(ll.c1Path(), rr.c1Path())
     );
   }
 }

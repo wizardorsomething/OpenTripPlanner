@@ -140,7 +140,7 @@ public class McRangeRaptorConfig<T extends RaptorTripSchedule> {
         PatternRideC1.factory(),
         PatternRideC1.paretoComparatorRelativeCost()
       );
-      case USE_C1_LEXIMIN -> createTransitWorkerStrategy(
+      case USE_C1_LEXIMAX -> createTransitWorkerStrategy(
         state,
         PatternRideC1.factory(),
         PatternRideC1.paretoComparatorRelativeCostAP()
@@ -231,7 +231,7 @@ public class McRangeRaptorConfig<T extends RaptorTripSchedule> {
   private ArrivalParetoSetComparatorFactory<McStopArrival<T>> createFactoryParetoComparator() {
     return switch (resolveCostConfig()) {
       case USE_C1 -> ArrivalParetoSetComparatorFactory.ofCompareC1();
-      case USE_C1_LEXIMIN -> LeximaxComparators.ofCompareC1();
+      case USE_C1_LEXIMAX -> LeximaxComparators.ofCompareC1();
       case USE_C1_RELAXED_IF_C2_IS_OPTIMAL -> ArrivalParetoSetComparatorFactory.ofCompareC1RelaxedOnC2Dominance(
         mcRequest().relaxC1(),
         dominanceFunctionC2()
@@ -279,7 +279,7 @@ public class McRangeRaptorConfig<T extends RaptorTripSchedule> {
 
   private ParetoSetCost resolveCostConfig() {
     if (context().profile().is(RaptorProfile.MULTI_CRITERIA_AP)) {
-      return ParetoSetCost.USE_C1_LEXIMIN;
+      return ParetoSetCost.USE_C1_LEXIMAX;
     }
     if (isTransitPriority()) {
       return ParetoSetCost.USE_C1_RELAXED_IF_C2_IS_OPTIMAL;

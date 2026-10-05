@@ -22,7 +22,7 @@ public enum ParetoSetCost {
    * c1 comparison is used.
    */
   USE_C1_RELAXED_IF_C2_IS_OPTIMAL,
-  USE_C1_LEXIMIN;
+  USE_C1_LEXIMAX;
 
   /// Return `true` if the c1 criteria is included in the pareto comparison.
   public boolean useC1() {

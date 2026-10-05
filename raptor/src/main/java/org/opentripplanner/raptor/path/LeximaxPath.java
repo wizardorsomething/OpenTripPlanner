@@ -99,10 +99,10 @@ public class LeximaxPath<T extends RaptorTripSchedule> extends Path<T> {
     Arrays.sort(sortedL);
     int[] sortedR = ((LeximaxPath<T>) r).getC1Path().clone();
     Arrays.sort(sortedR);
-    return leximinComparison(sortedL, sortedR);
+    return leximaxComparison(sortedL, sortedR);
   }
 
-  private static boolean leximinComparison(int[] pathL, int[] pathR) {
+  private static boolean leximaxComparison(int[] pathL, int[] pathR) {
     int lenL = pathL.length;
     int lenR = pathR.length;
     int minLen = Math.min(lenL, lenR);

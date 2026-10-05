@@ -73,10 +73,10 @@ public final class PathParetoSetComparators {
         case USE_ARRIVAL_TIME -> comparatorArrivalTimeAndC1();
         case USE_DEPARTURE_TIME -> comparatorDepartureTimeAndC1();
       };
-      case USE_C1_LEXIMIN -> switch (timeConfig) {
-        case USE_TIMETABLE -> comparatorTimetableAndC1Leximin();
-        case USE_ARRIVAL_TIME -> comparatorArrivalTimeAndC1Leximin();
-        case USE_DEPARTURE_TIME -> comparatorDepartureTimeAndC1Leximin();
+      case USE_C1_LEXIMAX -> switch (timeConfig) {
+        case USE_TIMETABLE -> comparatorTimetableAndC1Leximax();
+        case USE_ARRIVAL_TIME -> comparatorArrivalTimeAndC1Leximax();
+        case USE_DEPARTURE_TIME -> comparatorDepartureTimeAndC1Leximax();
       };
       case USE_C1_RELAXED_IF_C2_IS_OPTIMAL -> switch (timeConfig) {
         case USE_TIMETABLE -> comparatorTimetableAndRelaxedC1IfC2IsOptimal(relaxC1, c2Comp);
@@ -143,7 +143,7 @@ public final class PathParetoSetComparators {
 
   private static <T extends RaptorTripSchedule> ParetoComparator<
     RaptorPath<T>
-  > comparatorTimetableAndC1Leximin() {
+  > comparatorTimetableAndC1Leximax() {
     return (l, r) ->
       compareIterationDepartureTime(l, r) ||
       compareArrivalTime(l, r) ||
@@ -154,7 +154,7 @@ public final class PathParetoSetComparators {
 
   private static <T extends RaptorTripSchedule> ParetoComparator<
     RaptorPath<T>
-  > comparatorArrivalTimeAndC1Leximin() {
+  > comparatorArrivalTimeAndC1Leximax() {
     return (l, r) ->
       compareArrivalTime(l, r) ||
       compareNumberOfTransfers(l, r) ||
@@ -164,7 +164,7 @@ public final class PathParetoSetComparators {
 
   private static <T extends RaptorTripSchedule> ParetoComparator<
     RaptorPath<T>
-  > comparatorDepartureTimeAndC1Leximin() {
+  > comparatorDepartureTimeAndC1Leximax() {
     return (l, r) ->
       compareDepartureTime(l, r) ||
       compareNumberOfTransfers(l, r) ||
