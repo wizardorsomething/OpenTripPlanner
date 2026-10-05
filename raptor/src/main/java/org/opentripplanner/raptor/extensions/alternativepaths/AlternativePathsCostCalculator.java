@@ -46,11 +46,7 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
     transfersFromStop = new HashMap<>();
   }
 
-  public void applyInfo(
-    APOutput<T> routingInfo,
-    int earliest,
-    int latest
-  ) {
+  public void applyInfo(APOutput<T> routingInfo, int earliest, int latest) {
     var initialTripsByStop = routingInfo.initialTripsByStop();
     var resolver = transitData.stopNameResolver();
     this.latest = latest;
@@ -62,10 +58,8 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
 
       var latestTrips = new HashMap<Integer, T>();
       for (T trip : entry.getValue()) {
-        latestTrips.merge(
-          trip.pattern().patternIndex(),
-          trip,
-          (a, b) -> a.departure(0) >= b.departure(0) ? a : b
+        latestTrips.merge(trip.pattern().patternIndex(), trip, (a, b) ->
+          a.departure(0) >= b.departure(0) ? a : b
         );
       }
 
@@ -74,22 +68,16 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
         var pattern = latestTrip.pattern();
         var timetable = transitData.getRouteForIndex(patternEntry.getKey()).timetable();
 
-        var idsInPattern = stopIndexToIdInPattern(stop, pattern);
-        for (int idInPattern : idsInPattern) {
-          int latestDeparture = latestTrip.departure(idInPattern);
-          for (int i = 0; i < timetable.numberOfTripSchedules(); i++) {
-            T trip = timetable.getTripSchedule(i);
-            int arrival = trip.arrival(idInPattern);
-            int departure = trip.departure(idInPattern);
-            if (arrival >= earliest && departure <= latestDeparture) {
-              tripsByStop
-                .get(stop)
-                .add(
-                  new StopTimeEntry<>(trip, arrival, departure)
-                );
-            } else if (departure > latestDeparture){
-              break;
-            }
+        int idInPattern = stopIndexToIdInPattern(stop, pattern);
+        int latestDeparture = latestTrip.departure(idInPattern);
+        for (int i = 0; i < timetable.numberOfTripSchedules(); i++) {
+          T trip = timetable.getTripSchedule(i);
+          int arrival = trip.arrival(idInPattern);
+          int departure = trip.departure(idInPattern);
+          if (arrival >= earliest && departure <= latestDeparture) {
+            tripsByStop.get(stop).add(new StopTimeEntry<>(trip, arrival, departure));
+          } else if (departure > latestDeparture) {
+            break;
           }
         }
       }
@@ -182,17 +170,15 @@ public final class AlternativePathsCostCalculator<T extends RaptorTripSchedule>
     return 0;
   }
 
-  private HashSet<Integer> stopIndexToIdInPattern(int stopIndex, RaptorTripPattern pattern) {
-    HashSet<Integer> idsInPattern = new HashSet<>();
+  private int stopIndexToIdInPattern(int stopIndex, RaptorTripPattern pattern) {
+    int largestId = -1;
     for (int position = 0; position < pattern.numberOfStopsInPattern(); position++) {
       if (pattern.stopIndex(position) == stopIndex) {
-        idsInPattern.add(position);
+        return position;
       }
     }
-    if (idsInPattern.isEmpty()) {
-      LOG.warn("Unknown stop index, this shouldn't happen.");
-    }
-    return idsInPattern;
+    LOG.warn("Unknown stop index, this shouldn't happen.");
+    return largestId;
   }
 
   @Override
