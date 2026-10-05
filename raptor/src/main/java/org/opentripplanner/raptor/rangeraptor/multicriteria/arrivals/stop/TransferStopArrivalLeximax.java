@@ -30,6 +30,7 @@ final class TransferStopArrivalLeximax<T extends RaptorTripSchedule>
       previousState.c1() + transferPath.c1()
     );
     this.transfer = transferPath;
+    setC1Path(previousState.c1Path());
   }
 
   @Override

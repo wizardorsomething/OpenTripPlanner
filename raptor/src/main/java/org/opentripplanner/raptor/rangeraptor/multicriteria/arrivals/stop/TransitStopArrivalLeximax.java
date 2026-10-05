@@ -29,6 +29,7 @@ final class TransitStopArrivalLeximax<T extends RaptorTripSchedule>
     super(previousState, previousState.round() + 1, stopIndex, arrivalTime, totalCost);
     this.boardStopPosition = boardStopPosition;
     this.trip = trip;
+    assignCost(previousState.c1Path(), totalCost);
   }
 
   @Override

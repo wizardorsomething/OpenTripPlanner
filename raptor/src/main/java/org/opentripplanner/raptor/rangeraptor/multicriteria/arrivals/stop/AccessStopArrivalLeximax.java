@@ -29,6 +29,7 @@ final class AccessStopArrivalLeximax<T extends RaptorTripSchedule> extends Lexim
     );
     this.departureTime = departureTime;
     this.access = access;
+    setC1Path(new int[] { access.c1() });
   }
 
   AccessStopArrivalLeximax(int departureTime, RaptorAccessEgress access, int cost) {

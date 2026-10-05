@@ -35,7 +35,6 @@ public abstract sealed class LeximaxMcStopArrival<T extends RaptorTripSchedule>
     int c1
   ) {
     super(previous, round, stop, arrivalTime, c1);
-    assignCost(previous.c1Path, c1);
   }
 
   /**
@@ -62,6 +61,10 @@ public abstract sealed class LeximaxMcStopArrival<T extends RaptorTripSchedule>
     return c1Path;
   }
 
+  public void setC1Path(int[] path) {
+    this.c1Path = path;
+  }
+
   /**
    * Add the given amount of slack to the arrival-time. This is used to add extraordinary
    * wait-time to an arrival - for example, in via-search where a minimum-wait-time can be set.
@@ -78,15 +81,15 @@ public abstract sealed class LeximaxMcStopArrival<T extends RaptorTripSchedule>
     );
   }
 
-  private void assignCost(int[] previousCost, int newCost) {
-    int idx = Arrays.binarySearch(previousCost, newCost);
+  protected void assignCost(int[] previousC, int c) {
+    int idx = Arrays.binarySearch(previousC, c);
     if (idx < 0) {
       idx = -(idx + 1);
     }
-    c1Path = new int[previousCost.length + 1];
-    System.arraycopy(previousCost, 0, c1Path, 0, idx);
-    System.arraycopy(previousCost, idx, c1Path, idx + 1, previousCost.length - idx);
-    c1Path[idx] = newCost;
+    c1Path = new int[previousC.length + 1];
+    System.arraycopy(previousC, 0, c1Path, 0, idx);
+    System.arraycopy(previousC, idx, c1Path, idx + 1, previousC.length - idx);
+    c1Path[idx] = c;
     // System.out.println(toString());
   }
 }
