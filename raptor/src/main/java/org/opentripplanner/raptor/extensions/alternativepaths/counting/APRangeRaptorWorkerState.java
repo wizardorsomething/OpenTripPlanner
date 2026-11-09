@@ -78,7 +78,6 @@ public final class APRangeRaptorWorkerState<T extends RaptorTripSchedule>
   private final HashMap<Integer, HashSet<StopTransfer>> transfersByStop;
   private final List<Integer> accessStops;
   private final List<Integer> egressStops;
-  private int windowFactor = 2;
 
   /**
    * create a BestTimes Range Raptor State for the given context.
@@ -157,10 +156,6 @@ public final class APRangeRaptorWorkerState<T extends RaptorTripSchedule>
       filteredStopsReachingStopWalking,
       new HashSet<>(egressStops)
     );
-  }
-
-  public void setWindowFactor(int windowFactor) {
-    this.windowFactor = windowFactor;
   }
 
   @Override
@@ -297,9 +292,9 @@ public final class APRangeRaptorWorkerState<T extends RaptorTripSchedule>
     if (exceedsTimeLimit(arrivalTime)) {
       return true;
     }
-    if (earlyPruning != null && earlyPruning.exceedsBound(arrivalTime)) {
-      return true;
-    }
+    //if (earlyPruning != null && earlyPruning.exceedsBound(arrivalTime)) {
+    //  return true;
+    //}
 
     final int toStop = transfer.stop();
     stopsReachingStop.computeIfAbsent(toStop, _ -> new HashSet<>()).add(fromStop);
@@ -325,11 +320,6 @@ public final class APRangeRaptorWorkerState<T extends RaptorTripSchedule>
   }
 
   /* private methods */
-  private boolean withinSlack(int stop, int alightTime) {
-    var optimal = bestTimes.time(stop);
-    return alightTime <= windowFactor * optimal;
-  }
-
   private boolean newOverallBestTime(int stop, int alightTime) {
     boolean updated = bestTimes.updateNewBestTime(stop, alightTime);
     if (updated) {

@@ -52,14 +52,12 @@ public class RaptorConfig<T extends RaptorTripSchedule> {
 
   public APRangeRaptor<T> createPreprocessingRangeRaptor(
     RaptorTransitDataProvider<T> transitData,
-    RaptorRequest<T> request,
-    int windowFactor
+    RaptorRequest<T> request
   ) {
     var context = context(transitData, request);
     var apConfig = new APConfig<>(context);
     var ctx = context.segments().getFirst().parent();
     var state = apConfig.resolveState();
-    state.setWindowFactor(windowFactor);
     var worker = new APRangeRaptorWorker<>(
       state,
       apConfig.strategy(),
