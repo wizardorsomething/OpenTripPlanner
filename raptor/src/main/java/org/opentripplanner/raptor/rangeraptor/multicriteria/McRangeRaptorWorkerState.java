@@ -131,9 +131,9 @@ public final class McRangeRaptorWorkerState<T extends RaptorTripSchedule>
   public void addAccessToStop(RaptorAccessEgress accessPath, int departureTime) {
     if (calculatorGeneralizedCost instanceof APMarker) {
       var cost = calculatorGeneralizedCost.transitArrivalCost(
-        0,
-        0,
         departureTime + accessPath.durationInSeconds(),
+        0,
+        accessPath.durationInSeconds(),
         null,
         accessPath.stop()
       );
@@ -332,9 +332,9 @@ public final class McRangeRaptorWorkerState<T extends RaptorTripSchedule>
   ) {
     if (calculatorGeneralizedCost instanceof APMarker) {
       return calculatorGeneralizedCost.transitArrivalCost(
-        ride.boardC1(),
-        alightSlack,
         alightTime,
+        0,
+        0,
         ride.trip(),
         alightStop
       );
