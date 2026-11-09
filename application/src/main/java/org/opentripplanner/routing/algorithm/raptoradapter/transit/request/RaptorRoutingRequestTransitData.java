@@ -28,6 +28,7 @@ import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripSchedule;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.cost.CostCalculatorFactory;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.GeneralizedCostParametersMapper;
 import org.opentripplanner.routing.api.request.RouteRequest;
+import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.transfer.constrained.ConstrainedTransferService;
 import org.opentripplanner.transfer.constrained.raptoradaptor.ConstrainedBoardingSearch;
 import org.opentripplanner.transfer.constrained.raptoradaptor.ConstrainedTransfersForPatterns;
@@ -78,6 +79,8 @@ public class RaptorRoutingRequestTransitData implements RaptorTransitDataProvide
 
   private final int validTransitDataEndTime;
 
+  private final int maxTransferDuration;
+
   public RaptorRoutingRequestTransitData(
     RaptorTransitData raptorTransitData,
     TransitGroupPriorityService transitGroupPriorityService,
@@ -115,6 +118,15 @@ public class RaptorRoutingRequestTransitData implements RaptorTransitDataProvide
       p -> p.route().getAgency().getId()
     );
 
+    this.maxTransferDuration = Math.toIntExact(
+      request
+        .preferences()
+        .street()
+        .accessEgress()
+        .maxDuration()
+        .valueOf(StreetMode.WALK)
+        .toSeconds()
+    );
     if (request.preferences().transit().raptor().profile() == RaptorProfile.MULTI_CRITERIA_AP) {
       LOG.info("Created Alternative Paths cost calculator");
       this.generalizedCostCalculator = new AlternativePathsCostCalculator<>(this);
@@ -156,18 +168,27 @@ public class RaptorRoutingRequestTransitData implements RaptorTransitDataProvide
     this.constrainedTransfers = original.constrainedTransfers;
     this.validTransitDataStartTime = original.validTransitDataStartTime;
     this.validTransitDataEndTime = original.validTransitDataEndTime;
+    this.maxTransferDuration = original.maxTransferDuration;
     this.generalizedCostCalculator = newCostCalculator;
     this.slackProvider = original.slackProvider();
   }
 
   @Override
   public Iterator<? extends RaptorTransfer> getTransfersFromStop(int stopIndex) {
-    return transferIndex.getForwardTransfers(stopIndex).iterator();
+    return transferIndex
+      .getForwardTransfers(stopIndex)
+      .stream()
+      .filter(t -> t.durationInSeconds() < maxTransferDuration)
+      .iterator();
   }
 
   @Override
   public Iterator<? extends RaptorTransfer> getTransfersToStop(int stopIndex) {
-    return transferIndex.getReversedTransfers(stopIndex).iterator();
+    return transferIndex
+      .getReversedTransfers(stopIndex)
+      .stream()
+      .filter(t -> t.durationInSeconds() < maxTransferDuration)
+      .iterator();
   }
 
   @Override
