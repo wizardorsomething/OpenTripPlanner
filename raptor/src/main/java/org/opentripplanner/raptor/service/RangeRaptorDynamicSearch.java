@@ -8,6 +8,7 @@ import static org.opentripplanner.raptor.spi.SearchDirection.FORWARD;
 import static org.opentripplanner.raptor.spi.SearchDirection.REVERSE;
 
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -54,8 +55,6 @@ public class RangeRaptorDynamicSearch<T extends RaptorTripSchedule> {
   private final HeuristicSearchTask<T> fwdHeuristics;
   private final HeuristicSearchTask<T> revHeuristics;
 
-  private final int windowFactor = 2;
-
   public RangeRaptorDynamicSearch(
     RaptorConfig<T> config,
     RaptorTransitDataProvider<T> transitData,
@@ -99,11 +98,7 @@ public class RangeRaptorDynamicSearch<T extends RaptorTripSchedule> {
           dynamicRequest.performanceTimers().withNamePrefix(builder.generateAlias())
         );
         RaptorRequest<T> backwardRequest = builder.build();
-        var backwardRouter = config.createPreprocessingRangeRaptor(
-          transitData,
-          backwardRequest,
-          windowFactor
-        );
+        var backwardRouter = config.createPreprocessingRangeRaptor(transitData, backwardRequest);
         backwardRouter.route();
         var routingInfo = backwardRouter.routingInfo();
         int timeWindowStart = dynamicRequest.searchParams().earliestDepartureTime();
@@ -115,11 +110,22 @@ public class RangeRaptorDynamicSearch<T extends RaptorTripSchedule> {
         ((AlternativePathsCostCalculator<T>) transitData.multiCriteriaCostCalculator()).applyInfo(
           routingInfo,
           timeWindowStart,
-          timeWindowEnd
+          timeWindowEnd,
+          dynamicRequest.searchParams().accessEgressMaxDurationSeconds()
         );
       }
 
-      return createAndRunDynamicRRWorker(dynamicRequest);
+      var response = createAndRunDynamicRRWorker(dynamicRequest);
+      if (originalRequest.profile().is(MULTI_CRITERIA_AP) && LOG.isDebugEnabled()) {
+        HashSet<Integer> stopKeys = new HashSet<>();
+        for (var p : response.paths()) {
+          stopKeys.addAll(p.listStops());
+        }
+        ((AlternativePathsCostCalculator<T>) transitData.multiCriteriaCostCalculator()).printInfo(
+          stopKeys
+        );
+      }
+      return response;
     } catch (DestinationNotReachedException e) {
       return new RaptorResponse<>(
         Collections.emptyList(),
