@@ -33,6 +33,7 @@ import org.opentripplanner.routing.api.response.RoutingError;
 import org.opentripplanner.routing.api.response.RoutingErrorCode;
 import org.opentripplanner.routing.error.RoutingValidationException;
 import org.opentripplanner.routing.framework.DebugTimingAggregator;
+import org.opentripplanner.routing.framework.PathCapture;
 import org.opentripplanner.routing.linking.LinkingContext;
 import org.opentripplanner.routing.via.ViaCoordinateTransferFactory;
 import org.opentripplanner.standalone.api.OtpServerRequestContext;
@@ -182,6 +183,8 @@ public class TransitRouter {
       debugTimingAggregator.finishedDirectTransitSearch();
     }
     debugTimingAggregator.startedItineraryCreation();
+    var resolver = requestTransitDataProvider.stopNameResolver();
+    paths.forEach(p -> PathCapture.add(p.toString(resolver)));
 
     // TODO VIA - Temporarily turn OptimizeTransfers OFF for VIA search until the service support via
     //            Remove '&& !request.isViaSearch()'

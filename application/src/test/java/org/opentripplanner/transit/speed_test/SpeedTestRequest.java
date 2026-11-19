@@ -55,6 +55,8 @@ public class SpeedTestRequest {
     } else if (input.arrivalTimeSet()) {
       builder.withDateTime(time(input.arrivalTime())).withArriveBy(true);
     }
+    // this is only for SpeedTestDump, remove/comment out otherwise
+    // builder.withTimetableView(false);
 
     if (input.window() != null) {
       builder.withSearchWindow(input.window());
